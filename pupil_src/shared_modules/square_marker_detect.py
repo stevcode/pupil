@@ -9,6 +9,7 @@ See COPYING and COPYING.LESSER for license details.
 ---------------------------------------------------------------------------~(*)
 '''
 
+import os.path
 import cv2
 import logging
 logger = logging.Logger(__name__)
@@ -19,7 +20,7 @@ from scipy.interpolate import interp1d
 def reversedEnumerate(l):
     return zip(range(len(l)-1, -1, -1), reversed(l))
 
-from math import sqrt
+from math import sqrt, fabs, log10
 sqrt_2 = sqrt(2)
 
 def get_close_markers(markers,centroids=None, min_distance=20):
@@ -150,13 +151,48 @@ def correct_gradient(gray_img,r):
         #px outside of img frame, let the other method check
         return True
 
+isLoaded = False
+def startBox():
+    start_box = cv2.imread(r'C:\work\upperleft.bmp',cv2.IMREAD_GRAYSCALE)
+    # gray_start_box = cv2.cvtColor(start_box, cv2.COLOR_BGR2GRAY)
+
+
+    edges = cv2.adaptiveThreshold(start_box, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 9)
+    if not os.path.isfile(r'C:\work\gray_upperleft_edges.bmp'):
+        cv2.imwrite(r'C:\work\gray_upperleft_edges.bmp', edges)
+
+    _img, contours, hierarchy = cv2.findContours(edges, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE,
+                                                 offset=(0, 0))  # TC89_KCOS
+
+
+    hierarchy = hierarchy[0]
+    contours = np.array(contours)
+    # keep only contours                        with parents     and      children
+    contained_contours = contours[np.logical_and(hierarchy[:, 3] >= 0, hierarchy[:, 2] >= 0)]
+    cv2.drawContours(start_box, contained_contours, -1, (255, 0, 0))
+    if not os.path.isfile(r'C:\work\gray_upperleft_better_c.bmp'):
+        cv2.imwrite(r'C:\work\gray_upperleft_better_c.bmp', start_box)
+
+    if not os.path.isfile(r'C:\work\gray_upperleft_c.bmp'):
+        cv2.imwrite(r'C:\work\gray_upperleft_c.bmp', _img)
+
+    # print("NUMBER OF CONTOURS IN REFERENCE IMAGE:")
+    # print(len(contained_contours))
+    isLoaded = True
 
 def detect_markers(gray_img,grid_size,min_marker_perimeter=40,aperture=11,visualize=False):
     edges = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, aperture, 9)
+    if not os.path.isfile(r'C:\work\edges.bmp'):
+        cv2.imwrite(r'C:\work\edges.bmp', edges)
 
     _img, contours, hierarchy = cv2.findContours(edges,
                                     mode=cv2.RETR_TREE,
                                     method=cv2.CHAIN_APPROX_SIMPLE,offset=(0,0)) #TC89_KCOS
+
+    # TODO: Save a copy of _img so inspect it's greyscale. Possibly adjust known color of anoto dots
+
+    if not isLoaded:
+        startBox()
 
     # remove extra encapsulation
     hierarchy = hierarchy[0]
@@ -165,12 +201,27 @@ def detect_markers(gray_img,grid_size,min_marker_perimeter=40,aperture=11,visual
     contained_contours = contours[np.logical_and(hierarchy[:,3]>=0, hierarchy[:,2]>=0)]
     # turn on to debug contours
     # cv2.drawContours(gray_img, contours,-1, (0,255,255))
-    # cv2.drawContours(gray_img, aprox_contours,-1, (255,0,0))
+
+    # test = nine_patch(contours)
+    # cv2.drawContours(gray_img, test, -1, (255, 0, 0))
 
     # contained_contours = contours #overwrite parent children check
 
     #filter out rects
     aprox_contours = [cv2.approxPolyDP(c,epsilon=2.5,closed=True) for c in contained_contours]
+    #cv2.drawContours(gray_img, aprox_contours,-1, (255,0,0))
+
+    # start_box = cv2.imread(r'C:\work\gray_upperleft_better_c.bmp')
+    # start_box_bw = cv2.cvtColor(start_box, cv2.COLOR_RGB2GRAY)
+    # HM = cv2.HuMoments(cv2.moments(start_box_bw)).flatten()
+    # for c in aprox_contours:
+    #     similarity = matchShapes(c, HM)
+    #     if similarity <= 0.985:
+    #         #cv2.drawContours(gray_img, [c], -1, (255, 100, 50))
+    #         x, y, w, h = cv2.boundingRect(c)
+    #         cv2.rectangle(gray_img, (x,y),(x+w, y+h), (0,255,0), 2)
+
+    ORB_match(gray_img)
 
     # any rectagle will be made of 4 segemnts in its approximation
     # also we dont need to find a marker so small that we cannot read it in the end...
@@ -181,7 +232,6 @@ def detect_markers(gray_img,grid_size,min_marker_perimeter=40,aperture=11,visual
 
     if visualize:
         cv2.drawContours(gray_img, rect_cand,-1, (255,100,50))
-
 
     markers = []
     size = 20*grid_size
@@ -228,6 +278,61 @@ def detect_markers(gray_img,grid_size,min_marker_perimeter=40,aperture=11,visual
                     markers.append(marker)
     return markers
 
+
+def nine_patch(contours):
+    print("Contour Count: ")
+    print(len(contours))
+    a = []
+
+    longest_contour = None
+    longest_contour_length = 0
+    for c in contours:
+        if len(c) > longest_contour_length:
+            longest_contour_length = len(c)
+            longest_contour = c
+
+    min_x = float('inf')
+    min_y = float('inf')
+    max_x = 0
+    max_y = 0
+
+    if longest_contour is None:
+        return np.array(a)
+
+    for point in longest_contour:
+        point = point[0]
+        x = point[0]
+        y = point[1]
+        if x > max_x:
+            max_x = x
+        if x < min_x:
+            min_x = x
+        if y > max_y:
+            max_y = y
+        if y < min_y:
+            min_y = y
+
+    width = max_x - min_x
+    section_Width = width / 3
+    height = max_y - min_y
+    section_height = height / 3
+
+
+
+    for point in longest_contour:
+        p = point[0]
+        x = p[0]
+        y = p[1]
+
+        x_a_start = min_x
+        x_a_end = min_x + section_Width
+        y_a_start = min_y
+        y_a_end = min_y + section_height
+
+        if x_a_start <= x < x_a_end and y_a_start <= y < y_a_end:
+            a.append(point)
+
+    return np.array(a)
 
 
 def draw_markers(img,markers):
@@ -289,7 +394,41 @@ def m_screen_to_marker(marker):
     return cv2.getPerspectiveTransform(np.array(marker['verts'],dtype=np.float32),mapped_space_one)
 
 
+def ORB_match(img):
+    ref = cv2.imread(r'C:\work\upperleft3.bmp')
 
+    orb = cv2.ORB_create()
+    kp_ref, des_ref = orb.detectAndCompute(ref, None)
+    kp_img, des_img = orb.detectAndCompute(img, None)
+
+    # FLANN parameters
+    FLANN_INDEX_LSH = 6
+    index_params = dict(algorithm=FLANN_INDEX_LSH, table_number=6,  # 12
+                        key_size=12,  # 20
+                        multi_probe_level=1)  # 2
+    search_params = dict(checks=150)  # or pass empty dictionary
+
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+
+    matches = flann.knnMatch(des_ref, des_img, k=2)
+
+    # Need to draw only good matches, so create a mask
+    matchesMask = [[0, 0] for i in range(len(matches))]
+
+    # ratio test as per Lowe's paper
+    keypoints = []
+    for i, (m, n) in enumerate([x for x in matches if not len(x) < 2]):
+        if m.distance < 0.7 * n.distance:
+            matchesMask[i] = [1, 0]
+            keypoints.append(kp_img[matches[i][0].trainIdx])
+
+    for kp in keypoints:
+        print("x: " + str(kp.pt[0]) + ", y: " + str(kp.pt[1]))
+
+    # draw_params = dict(matchColor=(0, 255, 0), singlePointColor=(255, 0, 0), matchesMask=matchesMask, flags=1)
+    #
+    # img = cv2.drawMatchesKnn(ref, kp_ref, img, kp_img, matches, None, **draw_params)
+    img = cv2.drawKeypoints(img, keypoints, None)
 
 
 #persistent vars for detect_markers_robust
@@ -299,6 +438,51 @@ lk_params = dict( winSize  = (45, 45),
 
 prev_img = None
 tick = 0
+
+
+def matchShapes(contour, HM):
+    anyA = False
+    anyB = False
+    ma = cv2.HuMoments(cv2.moments(contour)).flatten()
+    mb = HM
+    sma = 0
+    smb = 0
+    epsilon = 0.00001
+    mmm = 0
+    result = 0
+
+    for i in range(0, 7):
+        ama = fabs(ma[i])
+        amb = fabs(mb[i])
+
+        if ama > 0:
+            anyA = True
+        if amb > 0:
+            anyB = True
+
+        if ma[i] > 0:
+            sma = 1
+        elif ma[i] < 0:
+            sma = -1
+        else:
+            sma = 0
+
+        if mb[i] > 0:
+            smb = 1
+        elif ma[i] < 0:
+            smb = -1
+        else:
+            smb = 0
+
+        if ama > epsilon and amb > epsilon:
+            ama = 1.0 / (sma * log10(ama))
+            amb = 1.0 / (smb * log10(amb))
+            result = result + fabs(-ama + amb)
+
+    if anyA != anyB:
+        return float('inf')
+
+    return result
 
 def detect_markers_robust(gray_img,grid_size,prev_markers,min_marker_perimeter=40,aperture=11,visualize=False,true_detect_every_frame = 1,invert_image=False):
     global prev_img
