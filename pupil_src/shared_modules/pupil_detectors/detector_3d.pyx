@@ -9,6 +9,7 @@ See COPYING and COPYING.LESSER for license details.
 ---------------------------------------------------------------------------~(*)
 '''
 
+#define _ENABLE_EXTENDED_ALIGNED_STORAGE
 # cython: profile=False
 import cv2
 import numpy as np
