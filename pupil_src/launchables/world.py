@@ -174,6 +174,10 @@ def world(timebase, eyes_are_alive, ipc_pub_url, ipc_sub_url,
         g_pool.get_timestamp = get_timestamp
         g_pool.get_now = get_time_monotonic
 
+        # This is a bypass to avoid running hardwareTimeSync.py every connection.
+        raw_time = g_pool.get_now()
+        g_pool.timebase.value = raw_time # time.time()
+
         # manage plugins
         runtime_plugins = import_runtime_plugins(os.path.join(g_pool.user_dir, 'plugins'))
         user_plugins = [Audio_Capture,
