@@ -72,6 +72,7 @@ else:
                 logger.warning("Deprecation warning: Please update your homebrew glfw installation by running `brew migrate glfw`")
     elif os_name == "Windows":
         dll_path = find_library('glfw3') #os.path.join(os.path.dirname(os.path.abspath(os.path.curdir)), 'shared_modules', 'external', 'glfw3')
+        # Needed to add C:\work\pupil\pupil_external to PATH (and restart after setting PATH)
     else:
         dll_path = find_library('glfw')
     if not dll_path:
