@@ -49,3 +49,7 @@ hmd_cal_data
 
 mprofile_*.dat
 .ipynb_checkpoints/
+.idea/
+*.pyd
+pupil_src/shared_modules/calibration_routines/optimization_calibration/build/
+pupil_src/shared_modules/pupil_detectors/fix.h
