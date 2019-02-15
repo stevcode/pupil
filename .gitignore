@@ -36,6 +36,7 @@ settings/
 *.sublime-project
 *.sublime-workspace
 .vscode
+.idea/
 #directory for test file will be ignored
 Pupil_Test_Files
 detector_2d.cpp
@@ -49,3 +50,8 @@ hmd_cal_data
 
 mprofile_*.dat
 .ipynb_checkpoints/
+pupil_src/shared_modules/calibration_routines/optimization_calibration/build/
+pupil_src/shared_modules/pupil_detectors/detector_2d.cp36-win_amd64.pyd
+pupil_src/shared_modules/pupil_detectors/detector_3d.cp36-win_amd64.pyd
+pupil_src/shared_modules/pupil_detectors/fix.h
+pupil_src/shared_modules/calibration_routines/optimization_calibration/calibration_methods.cp36-win_amd64.pyd
