@@ -182,6 +182,9 @@ class Surface_Tracker(Plugin):
         self.update_gui_markers()
         self.notify_all({"subject": "surfaces_changed"})
 
+    def capture_fiducial(self, _):
+        pass
+
     def init_ui(self):
         self.add_menu()
         self.menu.label = "Surface Tracker"
@@ -232,6 +235,7 @@ class Surface_Tracker(Plugin):
             )
         )
         self.menu.append(ui.Button("Add surface", lambda: self.add_surface("_")))
+        self.menu.append(ui.Button("Capture Custom Fiducial", lambda: self.capture_fiducial("_")))
 
         for s in self.surfaces:
             idx = self.surfaces.index(s)
