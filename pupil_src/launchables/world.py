@@ -221,20 +221,20 @@ def world(
             os.path.join(g_pool.user_dir, "plugins")
         )
         user_plugins = [
-            Audio_Capture,
-            Pupil_Groups,
-            Frame_Publisher,
+            # Audio_Capture,
+            # Pupil_Groups,
+            # Frame_Publisher,
             Pupil_Remote,
-            Time_Sync,
+            # Time_Sync,
             Surface_Tracker,
-            Annotation_Capture,
+            # Annotation_Capture,
             Log_History,
             Fixation_Detector,
             Blink_Detection,
-            Remote_Recorder,
+            # Remote_Recorder,
             Accuracy_Visualizer,
             Camera_Intrinsics_Estimation,
-            Hololens_Relay,
+            # Hololens_Relay,
         ]
         system_plugins = (
             [
