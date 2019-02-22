@@ -153,7 +153,7 @@ class Service_UI(System_Plugin_Base):
             ui.Info_Text("Service Version: {}".format(g_pool.version))
         )
 
-        g_pool.menubar.append(ui.Button("Restart with default settings", reset_restart))
+        # g_pool.menubar.append(ui.Button("Restart with default settings", reset_restart))
 
         # Register callbacks main_window
         glfw.glfwSetFramebufferSizeCallback(main_window, on_resize)

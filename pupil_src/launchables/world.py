@@ -301,7 +301,7 @@ def world(
             ("Display_Recent_Gaze", {}),
             ("Screen_Marker_Calibration", {}),
             ("Recorder", {}),
-            # ("Pupil_Remote", {}),
+            ("Pupil_Remote", {}),
             ("Accuracy_Visualizer", {}),
             ("Plugin_Manager", {}),
             ("System_Graphs", {}),
