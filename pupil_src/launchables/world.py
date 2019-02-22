@@ -289,7 +289,7 @@ def world(
                 "C930e",
             ],
             "frame_size": (1280, 720),
-            "frame_rate": 30,
+            "frame_rate": 30,   # SC - Set Default to 60?
         }
 
         default_plugins = [
