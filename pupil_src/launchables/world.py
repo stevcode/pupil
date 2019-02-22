@@ -465,7 +465,7 @@ def world(
 
         # setup GUI
         g_pool.gui = ui.UI()
-        g_pool.gui_user_scale = session_settings.get("gui_scale", 1.0)
+        g_pool.gui_user_scale = session_settings.get("gui_scale", 1.4)
         g_pool.menubar = ui.Scrolling_Menu(
             "Settings", pos=(-400, 0), size=(-icon_bar_width, 0), header_pos="left"
         )
