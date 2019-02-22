@@ -192,6 +192,7 @@ def world(
 
         icon_bar_width = 50
         window_size = None
+        window_size_default = (1920 + icon_bar_width, 1080)
         camera_render_size = None
         hdpi_factor = 1.0
 
@@ -425,7 +426,7 @@ def world(
                         )
 
         width, height = session_settings.get(
-            "window_size", (1280 + icon_bar_width, 720)
+            "window_size", window_size_default
         )
 
         # window and gl setup
