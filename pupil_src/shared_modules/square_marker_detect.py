@@ -26,6 +26,18 @@ from math import sqrt
 
 sqrt_2 = sqrt(2)
 
+# SIFT initialization
+# upper_left = cv2.imread(r'C:\work\upperleft2.bmp', cv2.IMREAD_GRAYSCALE)
+#
+# sift = cv2.xfeatures2d.SIFT_create()
+# upper_left_key_points, upper_left_descriptors = sift.detectAndCompute(upper_left, None)
+
+# upper_left = cv2.drawKeypoints(upper_left, upper_left_key_points, upper_left)
+# cv2.imshow("Reference", upper_left)
+
+# index_params = dict(algorithm=0, trees=5)
+# search_params = dict()
+# flann = cv2.FlannBasedMatcher(index_params,search_params)
 
 def get_close_markers(markers, centroids=None, min_distance=20):
     if centroids is None:
@@ -157,10 +169,45 @@ def correct_gradient(gray_img, r):
         # px outside of img frame, let the other method check
         return True
 
+def homography(gray_frame):
+    gray_frame_key_points, gray_frame_descriptors = sift.detectAndCompute(gray_frame, None)
+    # gray_frame = cv2.drawKeypoints(gray_frame, gray_frame_key_points, gray_frame)
+    # cv2.imshow("Test", gray_frame)
+
+    matches = flann.knnMatch(upper_left_descriptors, gray_frame_descriptors, k=2)
+    good_matches = []
+    for m, n in matches:
+        if m.distance < n.distance * 0.8:
+            good_matches.append(m)
+
+    # im3 = cv2.drawMatches(upper_left, upper_left_key_points, gray_frame, gray_frame_key_points, good_matches, gray_frame)
+    # cv2.imshow("Matches", im3)
+
+    if len(good_matches) > 10:
+        query_points = np.float32([upper_left_key_points[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+        train_points = np.float32([gray_frame_key_points[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+
+        matrix, mask = cv2.findHomography(query_points, train_points, cv2.RANSAC, 5.0)
+        matches_mask = mask.ravel().tolist()
+        if matrix and matrix.any():
+            h, w = upper_left.shape
+            pts = np.float32([[0,0], [0,h], [w,h], [w,0]]).reshape(-1, 1, 2)
+            dst = cv2.perspectiveTransform(pts, matrix)
+
+            homography_blah = cv2.polylines(gray_frame, [np.int32(dst)], True, (255, 0, 0), 3)
+            cv2.imshow("Matches", homography_blah)
+        else:
+            cv2.imshow("Matches", gray_frame)
+    else:
+        cv2.imshow("Matches", gray_frame)
+
 
 def detect_markers(
     gray_img, grid_size, min_marker_perimeter=40, aperture=11, visualize=False
 ):
+
+    # homography(gray_img)
+
     edges = cv2.adaptiveThreshold(
         gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, aperture, 9
     )
