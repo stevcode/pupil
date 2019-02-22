@@ -27,7 +27,7 @@ import pyaudio as pa
 
 
 audio_modes = ("voice and sound", "sound only", "voice only", "silent")
-default_audio_mode = audio_modes[0]
+default_audio_mode = audio_modes[3]     # Default audio mode to silent
 audio_mode = default_audio_mode
 
 
