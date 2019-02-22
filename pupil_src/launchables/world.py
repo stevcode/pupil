@@ -229,11 +229,11 @@ def world(
             # Audio_Capture,
             # Pupil_Groups,
             # Frame_Publisher,
-            Pupil_Remote,
+            # Pupil_Remote,
             # Time_Sync,
             Surface_Tracker,
             # Annotation_Capture,
-            Log_History,
+            # Log_History,
             Fixation_Detector,
             Blink_Detection,
             # Remote_Recorder,
@@ -243,7 +243,7 @@ def world(
         ]
         system_plugins = (
             [
-                Log_Display,
+                # Log_Display,      # Removes mid-screen running log
                 Display_Recent_Gaze,
                 Recorder,
                 Pupil_Data_Relay,
@@ -301,7 +301,7 @@ def world(
             ("Display_Recent_Gaze", {}),
             ("Screen_Marker_Calibration", {}),
             ("Recorder", {}),
-            ("Pupil_Remote", {}),
+            # ("Pupil_Remote", {}),
             ("Accuracy_Visualizer", {}),
             ("Plugin_Manager", {}),
             ("System_Graphs", {}),
