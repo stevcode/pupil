@@ -370,7 +370,7 @@ def world(
             "min_calibration_confidence", 0.8
         )
         g_pool.detection_mapping_mode = session_settings.get(
-            "detection_mapping_mode", "3d"
+            "detection_mapping_mode", "2d"
         )
         g_pool.active_calibration_plugin = None
         g_pool.active_gaze_mapping_plugin = None
