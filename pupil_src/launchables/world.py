@@ -497,15 +497,15 @@ def world(
         general_settings.append(
             ui.Selector("audio_mode", audio, selection=audio.audio_modes)
         )
-        general_settings.append(
-            ui.Selector(
-                "detection_mapping_mode",
-                g_pool,
-                label="detection & mapping mode",
-                setter=set_detection_mapping_mode,
-                selection=["disabled", "2d", "3d"],
-            )
-        )
+        # general_settings.append(
+        #     ui.Selector(
+        #         "detection_mapping_mode",
+        #         g_pool,
+        #         label="detection & mapping mode",
+        #         setter=set_detection_mapping_mode,
+        #         selection=["disabled", "2d", "3d"],
+        #     )
+        # )
         general_settings.append(
             ui.Switch(
                 "eye0_process",
