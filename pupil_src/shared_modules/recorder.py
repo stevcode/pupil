@@ -118,83 +118,83 @@ class Recorder(System_Plugin_Base):
         d["raw_jpeg"] = self.raw_jpeg
         return d
 
-    def init_ui(self):
-        self.add_menu()
-        self.menu.label = "Recorder"
-        self.menu_icon.order = 0.29
+    # def init_ui(self):
+        # self.add_menu()
+        # self.menu.label = "Recorder"
+        # self.menu_icon.order = 0.29
 
-        self.menu.append(
-            ui.Info_Text(
-                'Pupil recordings are saved like this: "path_to_recordings/recording_session_name/nnn" where "nnn" is an increasing number to avoid overwrites. You can use "/" in your session name to create subdirectories.'
-            )
-        )
-        self.menu.append(
-            ui.Info_Text(
-                'Recordings are saved to "~/pupil_recordings". You can change the path here but note that invalid input will be ignored.'
-            )
-        )
-        self.menu.append(
-            ui.Text_Input(
-                "rec_root_dir",
-                self,
-                setter=self.set_rec_root_dir,
-                label="Path to recordings",
-            )
-        )
-        self.menu.append(
-            ui.Text_Input(
-                "session_name",
-                self,
-                setter=self.set_session_name,
-                label="Recording session name",
-            )
-        )
-        self.menu.append(
-            ui.Switch(
-                "show_info_menu",
-                self,
-                on_val=True,
-                off_val=False,
-                label="Request additional user info",
-            )
-        )
-        self.menu.append(
-            ui.Selector(
-                "raw_jpeg",
-                self,
-                selection=[True, False],
-                labels=["bigger file, less CPU", "smaller file, more CPU"],
-                label="Compression",
-            )
-        )
-        self.menu.append(
-            ui.Info_Text(
-                "Recording the raw eye video is optional. We use it for debugging."
-            )
-        )
-        self.menu.append(
-            ui.Switch(
-                "record_eye", self, on_val=True, off_val=False, label="Record eye"
-            )
-        )
-        self.button = ui.Thumb(
-            "running", self, setter=self.toggle, label="R", hotkey="r"
-        )
-        self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
-        self.g_pool.quickbar.insert(2, self.button)
+        # self.menu.append(
+        #     ui.Info_Text(
+        #         'Pupil recordings are saved like this: "path_to_recordings/recording_session_name/nnn" where "nnn" is an increasing number to avoid overwrites. You can use "/" in your session name to create subdirectories.'
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Info_Text(
+        #         'Recordings are saved to "~/pupil_recordings". You can change the path here but note that invalid input will be ignored.'
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Text_Input(
+        #         "rec_root_dir",
+        #         self,
+        #         setter=self.set_rec_root_dir,
+        #         label="Path to recordings",
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Text_Input(
+        #         "session_name",
+        #         self,
+        #         setter=self.set_session_name,
+        #         label="Recording session name",
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Switch(
+        #         "show_info_menu",
+        #         self,
+        #         on_val=True,
+        #         off_val=False,
+        #         label="Request additional user info",
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Selector(
+        #         "raw_jpeg",
+        #         self,
+        #         selection=[True, False],
+        #         labels=["bigger file, less CPU", "smaller file, more CPU"],
+        #         label="Compression",
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Info_Text(
+        #         "Recording the raw eye video is optional. We use it for debugging."
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Switch(
+        #         "record_eye", self, on_val=True, off_val=False, label="Record eye"
+        #     )
+        # )
+        # self.button = ui.Thumb(
+        #     "running", self, setter=self.toggle, label="R", hotkey="r"
+        # )
+        # self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
+        # self.g_pool.quickbar.insert(2, self.button)
+        #
+        # self.low_disk_space_thumb = ui.Thumb(
+        #     "low_disk_warn", label="!", getter=lambda: True, setter=lambda x: None
+        # )
+        # self.low_disk_space_thumb.on_color[:] = (1, 0.0, 0.0, 0.8)
+        # self.low_disk_space_thumb.status_text = "Low disk space"
 
-        self.low_disk_space_thumb = ui.Thumb(
-            "low_disk_warn", label="!", getter=lambda: True, setter=lambda x: None
-        )
-        self.low_disk_space_thumb.on_color[:] = (1, 0.0, 0.0, 0.8)
-        self.low_disk_space_thumb.status_text = "Low disk space"
-
-    def deinit_ui(self):
-        if self.low_disk_space_thumb in self.g_pool.quickbar:
-            self.g_pool.quickbar.remove(self.low_disk_space_thumb)
-        self.g_pool.quickbar.remove(self.button)
-        self.button = None
-        self.remove_menu()
+    # def deinit_ui(self):
+        # if self.low_disk_space_thumb in self.g_pool.quickbar:
+        #     self.g_pool.quickbar.remove(self.low_disk_space_thumb)
+        # self.g_pool.quickbar.remove(self.button)
+        # self.button = None
+        # self.remove_menu()
 
     def toggle(self, _=None):
         if self.running:
