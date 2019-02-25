@@ -155,6 +155,7 @@ def world(
         from pupil_groups import Pupil_Groups
         from surface_tracker import Surface_Tracker
         from hips_surface_tracker import Hips_Surface_Tracker
+        from page_tracker import Page_Tracker
         from log_display import Log_Display
         from annotations import Annotation_Capture
         from log_history import Log_History
@@ -234,6 +235,7 @@ def world(
             # Time_Sync,
             # Surface_Tracker,
             Hips_Surface_Tracker,
+            # Page_Tracker,
             # Annotation_Capture,
             # Log_History,
             Fixation_Detector,
@@ -309,6 +311,7 @@ def world(
             # ("Blink_Detection", {}),
             # ("Fixation_Detector", {}),
             ("Hips_Surface_Tracker", {}),
+            # ("Page_Tracker", {}),
             ("Plugin_Manager", {}),
             ("System_Graphs", {}),
         ]
