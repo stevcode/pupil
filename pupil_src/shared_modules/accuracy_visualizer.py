@@ -63,102 +63,102 @@ class Accuracy_Visualizer(Plugin):
         self.succession_threshold = np.cos(np.deg2rad(0.5))
         self._outlier_threshold = outlier_threshold  # in degrees
 
-    def init_ui(self):
-        self.add_menu()
-        self.menu.label = "Accuracy Visualizer"
-
-        mapping_error_help = """The mapping error (orange line) is the angular
-                             distance between mapped pupil positions (red) and
-                             their corresponding reference points (blue).
-                             """.replace(
-            "\n", " "
-        ).replace(
-            "  ", ""
-        )
-
-        calib_area_help = """The calibration area (green) is defined as the
-                          convex hull of the reference points that were used
-                          for calibration. 2D mapping looses accuracy outside
-                          of this area. It is recommended to calibrate a big
-                          portion of the subject's field of view.
-                          """.replace(
-            "\n", " "
-        ).replace(
-            "  ", ""
-        )
-        self.menu.append(ui.Info_Text(calib_area_help))
-        self.menu.append(
-            ui.Switch("vis_mapping_error", self, label="Visualize mapping error")
-        )
-
-        self.menu.append(ui.Info_Text(mapping_error_help))
-        self.menu.append(
-            ui.Switch("vis_calibration_area", self, label="Visualize calibration area")
-        )
-
-        general_help = """Measure gaze mapping accuracy and precision using samples
-                          that were collected during calibration. The outlier threshold
-                          discards samples with high angular errors.""".replace(
-            "\n", " "
-        ).replace(
-            "  ", ""
-        )
-        self.menu.append(ui.Info_Text(general_help))
-
-        # self.menu.append(ui.Info_Text(''))
-        self.menu.append(
-            ui.Text_Input(
-                "outlier_threshold", self, label="Outlier Threshold [degrees]"
-            )
-        )
-
-        accuracy_help = """Accuracy is calculated as the average angular
-                        offset (distance) (in degrees of visual angle)
-                        between fixation locations and the corresponding
-                        locations of the fixation targets.""".replace(
-            "\n", " "
-        ).replace(
-            "  ", ""
-        )
-
-        precision_help = """Precision is calculated as the Root Mean Square (RMS)
-                            of the angular distance (in degrees of visual angle)
-                            between successive samples during a fixation.""".replace(
-            "\n", " "
-        ).replace(
-            "  ", ""
-        )
-
-        def ignore(_):
-            pass
-
-        self.menu.append(ui.Info_Text(accuracy_help))
-        self.menu.append(
-            ui.Text_Input(
-                "accuracy",
-                self,
-                "Angular Accuracy",
-                setter=ignore,
-                getter=lambda: self.accuracy
-                if self.accuracy is not None
-                else "Not available",
-            )
-        )
-        self.menu.append(ui.Info_Text(precision_help))
-        self.menu.append(
-            ui.Text_Input(
-                "precision",
-                self,
-                "Angular Precision",
-                setter=ignore,
-                getter=lambda: self.precision
-                if self.precision is not None
-                else "Not available",
-            )
-        )
-
-    def deinit_ui(self):
-        self.remove_menu()
+    # def init_ui(self):
+    #     self.add_menu()
+    #     self.menu.label = "Accuracy Visualizer"
+    #
+    #     mapping_error_help = """The mapping error (orange line) is the angular
+    #                          distance between mapped pupil positions (red) and
+    #                          their corresponding reference points (blue).
+    #                          """.replace(
+    #         "\n", " "
+    #     ).replace(
+    #         "  ", ""
+    #     )
+    #
+    #     calib_area_help = """The calibration area (green) is defined as the
+    #                       convex hull of the reference points that were used
+    #                       for calibration. 2D mapping looses accuracy outside
+    #                       of this area. It is recommended to calibrate a big
+    #                       portion of the subject's field of view.
+    #                       """.replace(
+    #         "\n", " "
+    #     ).replace(
+    #         "  ", ""
+    #     )
+    #     self.menu.append(ui.Info_Text(calib_area_help))
+    #     self.menu.append(
+    #         ui.Switch("vis_mapping_error", self, label="Visualize mapping error")
+    #     )
+    #
+    #     self.menu.append(ui.Info_Text(mapping_error_help))
+    #     self.menu.append(
+    #         ui.Switch("vis_calibration_area", self, label="Visualize calibration area")
+    #     )
+    #
+    #     general_help = """Measure gaze mapping accuracy and precision using samples
+    #                       that were collected during calibration. The outlier threshold
+    #                       discards samples with high angular errors.""".replace(
+    #         "\n", " "
+    #     ).replace(
+    #         "  ", ""
+    #     )
+    #     self.menu.append(ui.Info_Text(general_help))
+    #
+    #     # self.menu.append(ui.Info_Text(''))
+    #     self.menu.append(
+    #         ui.Text_Input(
+    #             "outlier_threshold", self, label="Outlier Threshold [degrees]"
+    #         )
+    #     )
+    #
+    #     accuracy_help = """Accuracy is calculated as the average angular
+    #                     offset (distance) (in degrees of visual angle)
+    #                     between fixation locations and the corresponding
+    #                     locations of the fixation targets.""".replace(
+    #         "\n", " "
+    #     ).replace(
+    #         "  ", ""
+    #     )
+    #
+    #     precision_help = """Precision is calculated as the Root Mean Square (RMS)
+    #                         of the angular distance (in degrees of visual angle)
+    #                         between successive samples during a fixation.""".replace(
+    #         "\n", " "
+    #     ).replace(
+    #         "  ", ""
+    #     )
+    #
+    #     def ignore(_):
+    #         pass
+    #
+    #     self.menu.append(ui.Info_Text(accuracy_help))
+    #     self.menu.append(
+    #         ui.Text_Input(
+    #             "accuracy",
+    #             self,
+    #             "Angular Accuracy",
+    #             setter=ignore,
+    #             getter=lambda: self.accuracy
+    #             if self.accuracy is not None
+    #             else "Not available",
+    #         )
+    #     )
+    #     self.menu.append(ui.Info_Text(precision_help))
+    #     self.menu.append(
+    #         ui.Text_Input(
+    #             "precision",
+    #             self,
+    #             "Angular Precision",
+    #             setter=ignore,
+    #             getter=lambda: self.precision
+    #             if self.precision is not None
+    #             else "Not available",
+    #         )
+    #     )
+    #
+    # def deinit_ui(self):
+    #     self.remove_menu()
 
     @property
     def outlier_threshold(self):
