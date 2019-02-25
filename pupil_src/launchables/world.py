@@ -154,6 +154,7 @@ def world(
         from pupil_remote import Pupil_Remote
         from pupil_groups import Pupil_Groups
         from surface_tracker import Surface_Tracker
+        from hips_surface_tracker import Hips_Surface_Tracker
         from log_display import Log_Display
         from annotations import Annotation_Capture
         from log_history import Log_History
@@ -231,7 +232,8 @@ def world(
             # Frame_Publisher,
             # Pupil_Remote,
             # Time_Sync,
-            Surface_Tracker,
+            # Surface_Tracker,
+            Hips_Surface_Tracker,
             # Annotation_Capture,
             # Log_History,
             Fixation_Detector,
@@ -306,7 +308,7 @@ def world(
             ("Camera_Intrinsics_Estimation", {}),
             # ("Blink_Detection", {}),
             # ("Fixation_Detector", {}),
-            # ("Surface_Tracker", {}),
+            ("Hips_Surface_Tracker", {}),
             ("Plugin_Manager", {}),
             ("System_Graphs", {}),
         ]
