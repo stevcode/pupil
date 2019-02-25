@@ -100,7 +100,7 @@ class Reference_Surface(object):
         self.use_distortion = True
 
         self.uid = str(time())
-        self.real_world_size = {"x": 1.0, "y": 1.0}
+        self.real_world_size = {"x": 5.5, "y": 8.5}
 
         self.heatmap = np.ones(0)
         self.heatmap_detail = 0.2
