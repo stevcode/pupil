@@ -299,7 +299,7 @@ def world(
             ("Log_Display", {}),
             ("Dummy_Gaze_Mapper", {}),
             ("Display_Recent_Gaze", {}),
-            ("Screen_Marker_Calibration", {}),
+            ("Single_Marker_Calibration", {}),
             ("Recorder", {}),
             ("Pupil_Remote", {}),
             ("Accuracy_Visualizer", {}),

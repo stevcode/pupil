@@ -120,7 +120,7 @@ class Calibration_Plugin(Plugin):
                 logger.warning("{} already stopped.".format(self.mode_pretty))
 
     def init_ui(self):
-        self.add_menu()
+        # self.add_menu()
         self.button = None
         self.calib_button = ui.Thumb(
             "active", self, label="C", setter=self.toggle_calibration, hotkey="c"
@@ -141,7 +141,7 @@ class Calibration_Plugin(Plugin):
         self.g_pool.quickbar.remove(self.test_button)
         self.calib_button = None
         self.test_button = None
-        self.remove_menu()
+        # self.remove_menu()
 
     def toggle_calibration(self, _=None):
         if self.active:

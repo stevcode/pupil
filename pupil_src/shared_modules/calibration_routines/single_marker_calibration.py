@@ -50,7 +50,7 @@ class Single_Marker_Calibration(Calibration_Plugin):
     def __init__(
         self,
         g_pool,
-        marker_mode="Full screen",
+        marker_mode="Manual",
         marker_scale=1.0,
         sample_duration=40,
         monitor_idx=0,
@@ -94,46 +94,46 @@ class Single_Marker_Calibration(Calibration_Plugin):
         self.circle_tracker = CircleTracker()
         self.markers = []
 
-    def init_ui(self):
-        super().init_ui()
-        self.monitor_names = [glfwGetMonitorName(m) for m in glfwGetMonitors()]
-
-        def get_monitors_idx_list():
-            monitors = [glfwGetMonitorName(m) for m in glfwGetMonitors()]
-            return range(len(monitors)), monitors
-
-        if self.monitor_idx not in get_monitors_idx_list()[0]:
-            logger.warning(
-                "Monitor at index %s no longer availalbe using default" % idx
-            )
-            self.monitor_idx = 0
-
-        self.menu.append(
-            ui.Info_Text(
-                "Calibrate using a single marker. Gaze at the center of the marker and move your head (e.g. in a slow spiral movement). This calibration method enables you to quickly sample a wide range of gaze angles and cover a large range of your FOV."
-            )
-        )
-        self.menu.append(
-            ui.Selector(
-                "marker_mode",
-                self,
-                selection=["Full screen", "Window", "Manual"],
-                label="Marker display mode",
-            )
-        )
-        self.menu.append(
-            ui.Selector(
-                "monitor_idx",
-                self,
-                selection_getter=get_monitors_idx_list,
-                label="Monitor",
-            )
-        )
-        self.menu.append(
-            ui.Slider(
-                "marker_scale", self, step=0.1, min=0.5, max=2.0, label="Marker size"
-            )
-        )
+    # def init_ui(self):
+    #     super().init_ui()
+    #     self.monitor_names = [glfwGetMonitorName(m) for m in glfwGetMonitors()]
+    #
+    #     def get_monitors_idx_list():
+    #         monitors = [glfwGetMonitorName(m) for m in glfwGetMonitors()]
+    #         return range(len(monitors)), monitors
+    #
+    #     if self.monitor_idx not in get_monitors_idx_list()[0]:
+    #         logger.warning(
+    #             "Monitor at index %s no longer availalbe using default" % idx
+    #         )
+    #         self.monitor_idx = 0
+    #
+    #     self.menu.append(
+    #         ui.Info_Text(
+    #             "Calibrate using a single marker. Gaze at the center of the marker and move your head (e.g. in a slow spiral movement). This calibration method enables you to quickly sample a wide range of gaze angles and cover a large range of your FOV."
+    #         )
+    #     )
+    #     self.menu.append(
+    #         ui.Selector(
+    #             "marker_mode",
+    #             self,
+    #             selection=["Full screen", "Window", "Manual"],
+    #             label="Marker display mode",
+    #         )
+    #     )
+    #     self.menu.append(
+    #         ui.Selector(
+    #             "monitor_idx",
+    #             self,
+    #             selection_getter=get_monitors_idx_list,
+    #             label="Monitor",
+    #         )
+    #     )
+    #     self.menu.append(
+    #         ui.Slider(
+    #             "marker_scale", self, step=0.1, min=0.5, max=2.0, label="Marker size"
+    #         )
+    #     )
 
     def start(self):
         if not self.g_pool.capture.online:
