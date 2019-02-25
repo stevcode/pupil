@@ -118,11 +118,11 @@ class Recorder(System_Plugin_Base):
         d["raw_jpeg"] = self.raw_jpeg
         return d
 
-    # def init_ui(self):
+    def init_ui(self):
         # self.add_menu()
         # self.menu.label = "Recorder"
         # self.menu_icon.order = 0.29
-
+        #
         # self.menu.append(
         #     ui.Info_Text(
         #         'Pupil recordings are saved like this: "path_to_recordings/recording_session_name/nnn" where "nnn" is an increasing number to avoid overwrites. You can use "/" in your session name to create subdirectories.'
@@ -177,23 +177,23 @@ class Recorder(System_Plugin_Base):
         #         "record_eye", self, on_val=True, off_val=False, label="Record eye"
         #     )
         # )
-        # self.button = ui.Thumb(
-        #     "running", self, setter=self.toggle, label="R", hotkey="r"
-        # )
-        # self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
-        # self.g_pool.quickbar.insert(2, self.button)
-        #
-        # self.low_disk_space_thumb = ui.Thumb(
-        #     "low_disk_warn", label="!", getter=lambda: True, setter=lambda x: None
-        # )
-        # self.low_disk_space_thumb.on_color[:] = (1, 0.0, 0.0, 0.8)
-        # self.low_disk_space_thumb.status_text = "Low disk space"
+        self.button = ui.Thumb(
+            "running", self, setter=self.toggle, label="R", hotkey="r"
+        )
+        self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
+        self.g_pool.quickbar.insert(2, self.button)
 
-    # def deinit_ui(self):
-        # if self.low_disk_space_thumb in self.g_pool.quickbar:
-        #     self.g_pool.quickbar.remove(self.low_disk_space_thumb)
-        # self.g_pool.quickbar.remove(self.button)
-        # self.button = None
+        self.low_disk_space_thumb = ui.Thumb(
+            "low_disk_warn", label="!", getter=lambda: True, setter=lambda x: None
+        )
+        self.low_disk_space_thumb.on_color[:] = (1, 0.0, 0.0, 0.8)
+        self.low_disk_space_thumb.status_text = "Low disk space"
+
+    def deinit_ui(self):
+        if self.low_disk_space_thumb in self.g_pool.quickbar:
+            self.g_pool.quickbar.remove(self.low_disk_space_thumb)
+        self.g_pool.quickbar.remove(self.button)
+        self.button = None
         # self.remove_menu()
 
     def toggle(self, _=None):
