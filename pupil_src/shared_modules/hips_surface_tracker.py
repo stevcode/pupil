@@ -54,7 +54,9 @@ class Hips_Surface_Tracker(Plugin):
         # all markers that are detected in the most recent frame
         self.markers = []
 
-        self.load_surface_definitions_from_file()
+        self.load_surface_definitions_from_folder()
+
+        self.current_maze_form = "None"
 
         # edit surfaces
         self.edit_surfaces = []
@@ -77,27 +79,48 @@ class Hips_Surface_Tracker(Plugin):
         self.menu = None
         self.button = None
         self.add_button = None
+        self.is_solving_maze = False
 
-    def load_surface_definitions_from_file(self):
+    def load_surface_definitions_from_folder(self):
         # all registered surfaces
-        self.surface_definitions = Persistent_Dict(
-            os.path.join(self.g_pool.user_dir, "surface_definitions")
+        self.surface_definitions = self.import_surfaces(
+            os.path.join(self.g_pool.user_dir, "surfaces")
         )
-        self.surfaces = [
-            Reference_Surface(self.g_pool, saved_definition=d)
-            for d in self.surface_definitions.get("realtime_square_marker_surfaces", [])
-        ]
+        # self.surfaces = [
+        #     Reference_Surface(self.g_pool, saved_definition=d)
+        #     for d in self.surface_definitions.get("realtime_square_marker_surfaces", [])
+        # ]
+        self.surfaces = []
 
-    def save_surface_definitions_to_file(self):
-        self.surface_definitions["realtime_square_marker_surfaces"] = [
-            rs.save_to_dict() for rs in self.surfaces if rs.defined
-        ]
-        self.surface_definitions.save()
+    def import_surfaces(self, surfaces_dir):
+
+        surface_definitions = []
+        if os.path.isdir(surfaces_dir):
+            for d in os.listdir(surfaces_dir):
+                logger.debug("Scanning: {}".format(d))
+                try:
+                    pass
+                    # if os.path.isfile(os.path.join(surfaces_dir, d)):
+                    #     d, ext = d.rsplit(".", 1)
+                    #     if ext not in ("py", "so", "dylib"):
+                    #         continue
+                    # module = importlib.import_module(d)
+                    # logger.debug("Imported: {}".format(module))
+                    # for name in dir(module):
+                    #     member = getattr(module, name)
+                    #     if (isinstance(member, type) and issubclass(member,
+                    #                                                 Plugin) and member.__name__ != "Plugin"):
+                    #         logger.info("Added: {}".format(member))
+                    #         runtime_plugins.append(member)
+                except Exception as e:
+                    logger.warning("Failed to load '{}'. Reason: '{}' ".format(d, e))
+        return surface_definitions
 
     def on_notify(self, notification):
         if notification["subject"] == "surfaces_changed":
             logger.info("Surfaces changed. Saving to file.")
-            self.save_surface_definitions_to_file()
+            # self.save_surface_definitions_to_file()
+            #         TODO: End recording if ongoing.
 
     def on_pos(self, pos):
         self._last_mouse_pos = normalize(
@@ -192,31 +215,53 @@ class Hips_Surface_Tracker(Plugin):
         self.menu.append(ui.Info_Text(
                 "This plugin detects and tracks fiducial markers Hidden In Plain Sight in the scene."))
         self.menu.append(ui.Switch("robust_detection", self, label="Robust detection"))
-        self.menu.append(ui.Switch("invert_image", self, label="Use inverted markers"))
-        self.menu.append(ui.Slider("min_marker_perimeter", self, step=1, min=30, max=100))
         self.menu.append(ui.Switch("locate_3d", self, label="3D localization"))
-        self.menu.append(ui.Selector("mode", self, label="Mode",
-                selection=["Show Markers and Surfaces", "Show marker IDs", "Show Heatmaps", ], ))
-        self.menu.append(ui.Button("Add surface", lambda: self.add_surface("_")))
-        self.menu.append(ui.Button("Capture Custom Fiducial", lambda: self.capture_fiducial("_")))
 
-        for s in self.surfaces:
-            idx = self.surfaces.index(s)
-            s_menu = ui.Growing_Menu("Surface {}".format(idx))
-            s_menu.collapsed = True
-            s_menu.append(ui.Text_Input("name", s))
-            s_menu.append(ui.Text_Input("x", s.real_world_size, label="X size"))
-            s_menu.append(ui.Text_Input("y", s.real_world_size, label="Y size"))
-            s_menu.append(ui.Text_Input("gaze_history_length", s, label="Gaze History Length [seconds]"))
-            s_menu.append(ui.Button("Open Debug Window", s.open_close_window))
+        # for s in self.surfaces:
+        #     idx = self.surfaces.index(s)
+        #     s_menu = ui.Growing_Menu("Surface {}".format(idx))
+        #     s_menu.collapsed = True
+        #     s_menu.append(ui.Text_Input("name", s))
+        #     s_menu.append(ui.Text_Input("x", s.real_world_size, label="X size"))
+        #     s_menu.append(ui.Text_Input("y", s.real_world_size, label="Y size"))
+        #     s_menu.append(ui.Text_Input("gaze_history_length", s, label="Gaze History Length [seconds]"))
+        #     s_menu.append(ui.Button("Open Debug Window", s.open_close_window))
+        #
+        #     # closure to encapsulate idx
+        #     def make_remove_s(i):
+        #         return lambda: self.remove_surface(i)
+        #
+        #     remove_s = make_remove_s(idx)
+        #     s_menu.append(ui.Button("remove", remove_s))
+        #     self.menu.append(s_menu)
 
-            # closure to encapsulate idx
-            def make_remove_s(i):
-                return lambda: self.remove_surface(i)
+        self.menu.append(
+            ui.Selector(
+                "current_maze_form",
+                self,
+                setter=self.set_maze,
+                selection=[
+                    "None",
+                    "Maze - No Choice (EASY)",
+                    "Maze - Choice (EASY)",
+                    "Maze - No Choice (INT)",
+                    "Maze - Choice (INT)",
+                    "Maze - No Choice (ADV)",
+                    "Maze - Choice (EASY)",
+                    "Symbol-Digit (SYM)",
+                    "Symbol-Digit (DI)",
+                ],
+                label="Select Maze Form", ))
+        button_text = "End maze." if self.is_solving_maze else "Begin maze."
+        self.menu.append(ui.Button(button_text, lambda: self.solve_maze("_")))
 
-            remove_s = make_remove_s(idx)
-            s_menu.append(ui.Button("remove", remove_s))
-            self.menu.append(s_menu)
+    def set_maze(self, new_form):
+        self.current_maze_form = new_form
+        self.update_gui_markers()
+
+    def solve_maze(self, _):
+        self.is_solving_maze = not self.is_solving_maze
+        self.update_gui_markers()
 
     def recent_events(self, events):
         frame = events.get("frame")
@@ -339,7 +384,7 @@ class Hips_Surface_Tracker(Plugin):
         This happens either voluntarily or forced.
         if you have a GUI or glfw window destroy it here.
         """
-        self.save_surface_definitions_to_file()
+        # self.save_surface_definitions_to_file()
 
         for s in self.surfaces:
             s.cleanup()
