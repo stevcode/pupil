@@ -47,23 +47,23 @@ class System_Graphs(System_Plugin_Base):
         self.idx = None
 
     def init_ui(self):
-        self.add_menu()
-        self.menu_icon.order = 0.01
-        self.menu.label = "System Graphs"
-        self.menu.append(ui.Switch("show_cpu", self, label="Display CPU usage"))
-        self.menu.append(ui.Switch("show_fps", self, label="Display frames per second"))
-        self.menu.append(
-            ui.Switch("show_conf0", self, label="Display confidence for eye 0")
-        )
-        self.menu.append(
-            ui.Switch("show_conf1", self, label="Display confidence for eye 1")
-        )
-        self.menu.append(
-            ui.Switch("show_dia0", self, label="Display pupil diameter for eye 0")
-        )
-        self.menu.append(
-            ui.Switch("show_dia1", self, label="Display pupil diameter for eye 1")
-        )
+        # self.add_menu()
+        # self.menu_icon.order = 0.01
+        # self.menu.label = "System Graphs"
+        # self.menu.append(ui.Switch("show_cpu", self, label="Display CPU usage"))
+        # self.menu.append(ui.Switch("show_fps", self, label="Display frames per second"))
+        # self.menu.append(
+        #     ui.Switch("show_conf0", self, label="Display confidence for eye 0")
+        # )
+        # self.menu.append(
+        #     ui.Switch("show_conf1", self, label="Display confidence for eye 1")
+        # )
+        # self.menu.append(
+        #     ui.Switch("show_dia0", self, label="Display pupil diameter for eye 0")
+        # )
+        # self.menu.append(
+        #     ui.Switch("show_dia1", self, label="Display pupil diameter for eye 1")
+        # )
 
         # set up performace graphs:
         pid = os.getpid()
@@ -112,28 +112,28 @@ class System_Graphs(System_Plugin_Base):
             self.dia0_graph.max_val = val
             self.dia1_graph.max_val = val
 
-        self.menu.append(
-            ui.Slider(
-                "min_val",
-                self.dia0_graph,
-                label="Minimum pupil diameter",
-                setter=set_dia_min,
-                min=0.0,
-                max=15.0,
-                step=0.1,
-            )
-        )
-        self.menu.append(
-            ui.Slider(
-                "max_val",
-                self.dia0_graph,
-                label="Maximum pupil diameter",
-                setter=set_dia_max,
-                min=1.0,
-                max=15.0,
-                step=0.1,
-            )
-        )
+        # self.menu.append(
+        #     ui.Slider(
+        #         "min_val",
+        #         self.dia0_graph,
+        #         label="Minimum pupil diameter",
+        #         setter=set_dia_min,
+        #         min=0.0,
+        #         max=15.0,
+        #         step=0.1,
+        #     )
+        # )
+        # self.menu.append(
+        #     ui.Slider(
+        #         "max_val",
+        #         self.dia0_graph,
+        #         label="Maximum pupil diameter",
+        #         setter=set_dia_max,
+        #         min=1.0,
+        #         max=15.0,
+        #         step=0.1,
+        #     )
+        # )
 
         self.on_window_resize(self.g_pool.main_window)
 
@@ -211,7 +211,7 @@ class System_Graphs(System_Plugin_Base):
             self.idx = events["frame"].index  # required for eye graph logic in player
 
     def deinit_ui(self):
-        self.remove_menu()
+        # self.remove_menu()
         self.cpu_graph = None
         self.fps_graph = None
         self.conf0_graph = None
