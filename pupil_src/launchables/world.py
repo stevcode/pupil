@@ -549,7 +549,7 @@ def world(
 
         user_plugin_separator = ui.Separator()
         user_plugin_separator.order = 0.35
-        g_pool.iconbar.append(user_plugin_separator)
+        # g_pool.iconbar.append(user_plugin_separator)
 
         # plugins that are loaded based on user settings from previous session
         g_pool.plugins = Plugin_List(
