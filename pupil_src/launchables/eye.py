@@ -283,7 +283,7 @@ def eye(
         # Initialize capture
         default_settings = (
             "UVC_Source",
-            {"preferred_names": cap_src, "frame_size": (320, 240), "frame_rate": 120},
+            {"preferred_names": cap_src, "frame_size": (400, 400), "frame_rate": 120},
         )
 
         capture_source_settings = overwrite_cap_settings or session_settings.get(
@@ -354,7 +354,7 @@ def eye(
 
         # setup GUI
         g_pool.gui = ui.UI()
-        g_pool.gui_user_scale = session_settings.get("gui_scale", 1.0)
+        g_pool.gui_user_scale = session_settings.get("gui_scale", 1.2)
         g_pool.menubar = ui.Scrolling_Menu(
             "Settings", pos=(-500, 0), size=(-icon_bar_width, 0), header_pos="left"
         )

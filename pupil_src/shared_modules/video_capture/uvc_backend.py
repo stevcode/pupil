@@ -517,7 +517,7 @@ class UVC_Source(Base_Source):
     #     self.update_menu()
 
     def update_menu(self):
-        del self.menu[:]
+        # del self.menu[:]
         from pyglui import ui
 
         ui_elements = []
