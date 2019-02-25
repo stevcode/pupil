@@ -303,6 +303,10 @@ def world(
             ("Recorder", {}),
             ("Pupil_Remote", {}),
             ("Accuracy_Visualizer", {}),
+            ("Camera_Intrinsics_Estimation", {}),
+            ("Blink_Detection", {}),
+            ("Fixation_Detector", {}),
+            ("Surface_Tracker", {}),
             ("Plugin_Manager", {}),
             ("System_Graphs", {}),
         ]
