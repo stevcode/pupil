@@ -85,7 +85,7 @@ class Reference_Surface(object):
 
     """
 
-    def __init__(self, g_pool, name="unnamed", saved_definition=None):
+    def __init__(self, g_pool, name="Maze", saved_definition=None):
         self.g_pool = g_pool
         self.name = name
         self.markers = {}

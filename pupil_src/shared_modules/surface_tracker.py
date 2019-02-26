@@ -164,8 +164,11 @@ class Surface_Tracker(Plugin):
                                         {"subject": "surfaces_changed", "delay": 1}
                                     )
 
-    def add_surface(self, _):
+    def add_surface(self, is_symbol_digit):
         surf = Reference_Surface(self.g_pool)
+        if is_symbol_digit:
+            surf.real_world_size = {"x": 8.5, "y": 5.5}
+            surf.name = "Symbol Digit"
         surf.on_finish_define = self.save_surface_definitions_to_file
         self.surfaces.append(surf)
         self.update_gui_markers()
@@ -182,9 +185,6 @@ class Surface_Tracker(Plugin):
         self.update_gui_markers()
         self.notify_all({"subject": "surfaces_changed"})
 
-    def capture_fiducial(self, _):
-        pass
-
     def init_ui(self):
         self.add_menu()
         self.menu.label = "Surface Tracker"
@@ -192,50 +192,50 @@ class Surface_Tracker(Plugin):
         self.button = ui.Thumb("running", self, label="S", hotkey="s")
         self.button.on_color[:] = (0.1, 0.2, 1.0, 0.8)
         self.g_pool.quickbar.append(self.button)
-        self.add_button = ui.Thumb(
-            "add_surface",
-            setter=self.add_surface,
-            getter=lambda: False,
-            label="A",
-            hotkey="a",
-        )
-        self.g_pool.quickbar.append(self.add_button)
+        # self.add_button = ui.Thumb(
+        #     "add_surface",
+        #     setter=self.add_surface,
+        #     getter=lambda: False,
+        #     label="A",
+        #     hotkey="a",
+        # )
+        # self.g_pool.quickbar.append(self.add_button)
         self.update_gui_markers()
 
     def deinit_ui(self):
         self.g_pool.quickbar.remove(self.button)
         self.button = None
-        self.g_pool.quickbar.remove(self.add_button)
-        self.add_button = None
+        # self.g_pool.quickbar.remove(self.add_button)
+        # self.add_button = None
         self.remove_menu()
 
     def update_gui_markers(self):
         self.menu.elements[:] = []
         self.menu.append(
             ui.Info_Text(
-                "This plugin detects and tracks fiducial markers visible in the scene. You can define surfaces using 1 or more marker visible within the world view by clicking *add surface*. You can edit defined surfaces by selecting *Surface edit mode*."
+                "This plugin detects and tracks Maze and Symbol Digit pages visible in the scene using fiducial markers. Maze pages have a portrait orientation, Symbols Digit pages have a landscape orientation."
             )
         )
-        self.menu.append(ui.Switch("robust_detection", self, label="Robust detection"))
-        self.menu.append(ui.Switch("invert_image", self, label="Use inverted markers"))
-        self.menu.append(
-            ui.Slider("min_marker_perimeter", self, step=1, min=30, max=100)
-        )
-        self.menu.append(ui.Switch("locate_3d", self, label="3D localization"))
-        self.menu.append(
-            ui.Selector(
-                "mode",
-                self,
-                label="Mode",
-                selection=[
-                    "Show Markers and Surfaces",
-                    "Show marker IDs",
-                    "Show Heatmaps",
-                ],
-            )
-        )
-        self.menu.append(ui.Button("Add surface", lambda: self.add_surface("_")))
-        self.menu.append(ui.Button("Capture Custom Fiducial", lambda: self.capture_fiducial("_")))
+        # self.menu.append(ui.Switch("robust_detection", self, label="Robust detection"))
+        # self.menu.append(ui.Switch("invert_image", self, label="Use inverted markers"))
+        # self.menu.append(
+        #     ui.Slider("min_marker_perimeter", self, step=1, min=30, max=100)
+        # )
+        # self.menu.append(ui.Switch("locate_3d", self, label="3D localization"))
+        # self.menu.append(
+        #     ui.Selector(
+        #         "mode",
+        #         self,
+        #         label="Mode",
+        #         selection=[
+        #             "Show Markers and Surfaces",
+        #             "Show marker IDs",
+        #             "Show Heatmaps",
+        #         ],
+        #     )
+        # )
+        self.menu.append(ui.Button("Add Maze", lambda: self.add_surface(False)))
+        self.menu.append(ui.Button("Add Symbol-Digit", lambda: self.add_surface(True)))
 
         for s in self.surfaces:
             idx = self.surfaces.index(s)
@@ -244,11 +244,11 @@ class Surface_Tracker(Plugin):
             s_menu.append(ui.Text_Input("name", s))
             s_menu.append(ui.Text_Input("x", s.real_world_size, label="X size"))
             s_menu.append(ui.Text_Input("y", s.real_world_size, label="Y size"))
-            s_menu.append(
-                ui.Text_Input(
-                    "gaze_history_length", s, label="Gaze History Length [seconds]"
-                )
-            )
+            # s_menu.append(
+            #     ui.Text_Input(
+            #         "gaze_history_length", s, label="Gaze History Length [seconds]"
+            #     )
+            # )
             s_menu.append(ui.Button("Open Debug Window", s.open_close_window))
             # closure to encapsulate idx
             def make_remove_s(i):
