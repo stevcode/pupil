@@ -280,7 +280,8 @@ class Recorder(System_Plugin_Base):
         self.pldata_writers = {}
         self.frame_count = 0
         self.running = True
-        self.menu.read_only = True
+        if self.menu:
+            self.menu.read_only = True
         self.start_time = time()
         start_time_synced = self.g_pool.get_timestamp()
 
