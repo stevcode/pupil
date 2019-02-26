@@ -26,6 +26,9 @@ from square_marker_detect import (
     draw_markers,
     m_marker_to_screen,
 )
+
+from hips_marker_detect import detect_hips_markers
+
 from reference_surface import Reference_Surface
 
 from math import sqrt
@@ -274,13 +277,20 @@ class Hips_Surface_Tracker(Plugin):
             if self.invert_image:
                 gray = 255 - gray
 
-            if self.robust_detection:
-                self.markers = detect_markers_robust(gray, grid_size=5, aperture=self.aperture,
-                        prev_markers=self.markers, true_detect_every_frame=3,
-                        min_marker_perimeter=self.min_marker_perimeter, )
-            else:
-                self.markers = detect_markers(gray, grid_size=5, aperture=self.aperture,
-                        min_marker_perimeter=self.min_marker_perimeter, )
+            # Hack to take a picture
+            # if self.is_solving_maze:
+            #     self.is_solving_maze = False
+            #     # if os.path.isfile(r'C:\work\maze-nc-int.bmp'):
+            #     cv2.imwrite(r'C:\work\maze-nc-int.bmp', gray)
+
+            self.markers = detect_hips_markers(gray, grid_size=5, aperture=self.aperture, min_marker_perimeter=self.min_marker_perimeter, )
+            # if self.robust_detection:
+            #     self.markers = detect_markers_robust(gray, grid_size=5, aperture=self.aperture,
+            #             prev_markers=self.markers, true_detect_every_frame=3,
+            #             min_marker_perimeter=self.min_marker_perimeter, )
+            # else:
+            #     self.markers = detect_markers(gray, grid_size=5, aperture=self.aperture,
+            #             min_marker_perimeter=self.min_marker_perimeter, )
             if self.mode == "Show marker IDs":
                 draw_markers(frame.gray, self.markers)
 
@@ -323,6 +333,8 @@ class Hips_Surface_Tracker(Plugin):
                     if s.detected:
                         new_pos = s.img_to_ref_surface(np.array(pos))
                         s.move_vertex(v_idx, new_pos)
+
+
 
     def get_init_dict(self):
         return {
