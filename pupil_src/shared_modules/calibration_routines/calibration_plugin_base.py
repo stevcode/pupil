@@ -125,20 +125,20 @@ class Calibration_Plugin(Plugin):
         self.calib_button = ui.Thumb(
             "active", self, label="C", setter=self.toggle_calibration, hotkey="c"
         )
-        self.test_button = ui.Thumb(
-            "active", self, label="T", setter=self.toggle_accuracy_test, hotkey="t"
-        )
+        # self.test_button = ui.Thumb(
+        #     "active", self, label="T", setter=self.toggle_accuracy_test, hotkey="t"
+        # )
 
         on_color = (0.3, 0.2, 1.0, 0.9)
         self.calib_button.on_color[:] = on_color
-        self.test_button.on_color[:] = on_color
+        # self.test_button.on_color[:] = on_color
 
         self.g_pool.quickbar.insert(0, self.calib_button)
-        self.g_pool.quickbar.insert(1, self.test_button)
+        # self.g_pool.quickbar.insert(1, self.test_button)
 
     def deinit_ui(self):
         self.g_pool.quickbar.remove(self.calib_button)
-        self.g_pool.quickbar.remove(self.test_button)
+        # self.g_pool.quickbar.remove(self.test_button)
         self.calib_button = None
         self.test_button = None
         # self.remove_menu()
@@ -158,9 +158,9 @@ class Calibration_Plugin(Plugin):
     def start(self):
         if self.mode == "calibration":
             self.button = self.calib_button
-            self.g_pool.quickbar.remove(self.test_button)
+            # self.g_pool.quickbar.remove(self.test_button)
         elif self.mode == "accuracy_test":
-            self.button = self.test_button
+            # self.button = self.test_button
             self.g_pool.quickbar.remove(self.calib_button)
         self.notify_all({"subject": "calibration.started"})
 
@@ -168,8 +168,8 @@ class Calibration_Plugin(Plugin):
         self.button = None  # reset buttons
         if self.calib_button not in self.g_pool.quickbar:
             self.g_pool.quickbar.insert(0, self.calib_button)
-        if self.test_button not in self.g_pool.quickbar:
-            self.g_pool.quickbar.insert(1, self.test_button)
+        # if self.test_button not in self.g_pool.quickbar:
+        #     self.g_pool.quickbar.insert(1, self.test_button)
 
         self.notify_all({"subject": "{}.stopped".format(self.mode)})
 
