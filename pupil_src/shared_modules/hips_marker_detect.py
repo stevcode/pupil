@@ -29,17 +29,17 @@ sqrt_2 = sqrt(2)
 
 
 # SIFT initialization
-# upper_left = cv2.imread(r'C:\work\maze-nc-int-1.jpg', cv2.IMREAD_GRAYSCALE)
-#
-# sift = cv2.xfeatures2d.SIFT_create()
-# upper_left_key_points, upper_left_descriptors = sift.detectAndCompute(upper_left, None)
-#
-# upper_left = cv2.drawKeypoints(upper_left, upper_left_key_points, upper_left)
-# cv2.imshow("Reference", upper_left)
-#
-# index_params = dict(algorithm=0, trees=5)
-# search_params = dict()
-# flann = cv2.FlannBasedMatcher(index_params,search_params)
+upper_left = cv2.imread(r'C:\work\maze-nc-int-1.jpg', cv2.IMREAD_GRAYSCALE)
+
+sift = cv2.xfeatures2d.SIFT_create()
+upper_left_key_points, upper_left_descriptors = sift.detectAndCompute(upper_left, None)
+
+upper_left = cv2.drawKeypoints(upper_left, upper_left_key_points, upper_left)
+cv2.imshow("Reference", upper_left)
+
+index_params = dict(algorithm=0, trees=5)
+search_params = dict()
+flann = cv2.FlannBasedMatcher(index_params,search_params)
 
 def get_close_markers(markers, centroids=None, min_distance=20):
     if centroids is None:
@@ -201,8 +201,43 @@ def homography(gray_frame):
         cv2.imshow("Matches", gray_frame)
 
 
-def detect_hips_markers(gray_img, grid_size, min_marker_perimeter=40, aperture=11, visualize=False):
-    # homography(gray_img)
+def line_detection(gray_img, img):
+    #  https://www.youtube.com/watch?v=KEYzUP7-kkU
+    edges = cv2.Canny(gray_img, 75, 150)
+    # edges = cv2.Canny(gray_img, 50, 200, None, 3)
+    # lines = cv2.HoughLinesP(edges, 2, np.pi / 180, 30)
+    lines = cv2.HoughLinesP(edges, 2, np.pi / 90, 30)
+
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3, cv2.LINE_AA)
+
+        # print(len(lines))
+
+    cv2.imshow("Lines", img)
+
+
+def corner_detection(gray_img, img):
+    #  https://www.youtube.com/watch?v=ROjDoDqsnP8
+    corners = cv2.goodFeaturesToTrack(gray_img, 1000, 0.1, 10)
+    if corners is not None:
+        corners = np.int0(corners)
+
+        for corner in corners:
+            x, y = corner.ravel()
+            cv2.circle(img, (x, y), 5, (0, 255, 0), -1)
+    cv2.imshow("Lines", img)
+
+
+def detect_hips_markers(frame, gray_img, grid_size, min_marker_perimeter=40, aperture=11, visualize=False):
+    img = frame.img
+
+    undist_img = frame.undistorted_img
+    undist_gray = cv2.cvtColor(undist_img, cv2.COLOR_BGR2GRAY)
+    # corner_detection(gray_img, img)
+    line_detection(undist_gray, undist_img)
+
 
     edges = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, aperture, 9)
 

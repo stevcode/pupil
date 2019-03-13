@@ -38,6 +38,7 @@ class Frame(object):
         # indicate that the frame does not have a native yuv or jpeg buffer
         self.yuv_buffer = None
         self.jpeg_buffer = None
+        self.undistorted_img = None
 
     @property
     def img(self):

@@ -283,7 +283,7 @@ class Hips_Surface_Tracker(Plugin):
             #     # if os.path.isfile(r'C:\work\maze-nc-int.bmp'):
             #     cv2.imwrite(r'C:\work\maze-nc-int.bmp', gray)
 
-            self.markers = detect_hips_markers(gray, grid_size=5, aperture=self.aperture, min_marker_perimeter=self.min_marker_perimeter, )
+            self.markers = detect_hips_markers(frame, gray, grid_size=5, aperture=self.aperture, min_marker_perimeter=self.min_marker_perimeter, )
             # if self.robust_detection:
             #     self.markers = detect_markers_robust(gray, grid_size=5, aperture=self.aperture,
             #             prev_markers=self.markers, true_detect_every_frame=3,

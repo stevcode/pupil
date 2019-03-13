@@ -331,6 +331,7 @@ class Camera_Intrinsics_Estimation(Plugin):
             # This function is not yet compatible with the fisheye camera model and would have to be manually implemented.
             # adjusted_k,roi = cv2.getOptimalNewCameraMatrix(cameraMatrix= np.array(self.camera_intrinsics[0]), distCoeffs=np.array(self.camera_intrinsics[1]), imageSize=self.camera_intrinsics[2], alpha=0.5,newImgSize=self.camera_intrinsics[2],centerPrincipalPoint=1)
             self.undist_img = self.g_pool.capture.intrinsics.undistort(frame.img)
+            frame.undistorted_img = self.undist_img
 
     def gl_display(self):
 

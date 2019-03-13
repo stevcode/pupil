@@ -508,13 +508,13 @@ class UVC_Source(Base_Source):
     def online(self):
         return bool(self.uvc_capture)
 
-    # def deinit_ui(self):
-    #     self.remove_menu()
-    #
-    # def init_ui(self):
-    #     self.add_menu()
-    #     self.menu.label = "Local USB Source: {}".format(self.name)
-    #     self.update_menu()
+    def deinit_ui(self):
+        self.remove_menu()
+
+    def init_ui(self):
+        self.add_menu()
+        self.menu.label = "Local USB Source: {}".format(self.name)
+        self.update_menu()
 
     def update_menu(self):
         # del self.menu[:]
@@ -755,62 +755,62 @@ class UVC_Manager(Base_Manager):
     def get_init_dict(self):
         return {}
 
-    # def init_ui(self):
-    #     self.add_menu()
-    #
-    #     from pyglui import ui
-    #
-    #     ui_elements = []
-    #     ui_elements.append(ui.Info_Text("Local UVC sources"))
-    #
-    #     def dev_selection_list():
-    #         default = (None, "Select to activate")
-    #         self.devices.update()
-    #         dev_pairs = [default] + [
-    #             (d["uid"], d["name"])
-    #             for d in self.devices
-    #             if "RealSense" not in d["name"]
-    #         ]
-    #         return zip(*dev_pairs)
-    #
-    #     def activate(source_uid):
-    #         if not source_uid:
-    #             return
-    #         if not uvc.is_accessible(source_uid):
-    #             logger.error("The selected camera is already in use or blocked.")
-    #             return
-    #         settings = {
-    #             "frame_size": self.g_pool.capture.frame_size,
-    #             "frame_rate": self.g_pool.capture.frame_rate,
-    #             "uid": source_uid,
-    #         }
-    #         if self.g_pool.process == "world":
-    #             self.notify_all(
-    #                 {"subject": "start_plugin", "name": "UVC_Source", "args": settings}
-    #             )
-    #         else:
-    #             self.notify_all(
-    #                 {
-    #                     "subject": "start_eye_capture",
-    #                     "target": self.g_pool.process,
-    #                     "name": "UVC_Source",
-    #                     "args": settings,
-    #                 }
-    #             )
-    #
-    #     ui_elements.append(
-    #         ui.Selector(
-    #             "selected_source",
-    #             selection_getter=dev_selection_list,
-    #             getter=lambda: None,
-    #             setter=activate,
-    #             label="Activate source",
-    #         )
-    #     )
-    #     self.menu.extend(ui_elements)
-    #
-    # def deinit_ui(self):
-    #     self.remove_menu()
+    def init_ui(self):
+        self.add_menu()
+
+        from pyglui import ui
+
+        ui_elements = []
+        ui_elements.append(ui.Info_Text("Local UVC sources"))
+
+        def dev_selection_list():
+            default = (None, "Select to activate")
+            self.devices.update()
+            dev_pairs = [default] + [
+                (d["uid"], d["name"])
+                for d in self.devices
+                if "RealSense" not in d["name"]
+            ]
+            return zip(*dev_pairs)
+
+        def activate(source_uid):
+            if not source_uid:
+                return
+            if not uvc.is_accessible(source_uid):
+                logger.error("The selected camera is already in use or blocked.")
+                return
+            settings = {
+                "frame_size": self.g_pool.capture.frame_size,
+                "frame_rate": self.g_pool.capture.frame_rate,
+                "uid": source_uid,
+            }
+            if self.g_pool.process == "world":
+                self.notify_all(
+                    {"subject": "start_plugin", "name": "UVC_Source", "args": settings}
+                )
+            else:
+                self.notify_all(
+                    {
+                        "subject": "start_eye_capture",
+                        "target": self.g_pool.process,
+                        "name": "UVC_Source",
+                        "args": settings,
+                    }
+                )
+
+        ui_elements.append(
+            ui.Selector(
+                "selected_source",
+                selection_getter=dev_selection_list,
+                getter=lambda: None,
+                setter=activate,
+                label="Activate source",
+            )
+        )
+        self.menu.extend(ui_elements)
+
+    def deinit_ui(self):
+        self.remove_menu()
 
     def cleanup(self):
         self.devices.cleanup()

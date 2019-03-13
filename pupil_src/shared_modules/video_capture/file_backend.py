@@ -47,6 +47,7 @@ class Frame(object):
         self.jpeg_buffer = None
         self.yuv_buffer = None
         self.height, self.width = av_frame.height, av_frame.width
+        self.undistorted_img = None
 
     def copy(self):
         return Frame(self.timestamp, self._av_frame, self.index)

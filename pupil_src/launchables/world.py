@@ -310,6 +310,7 @@ def world(
             ("Camera_Intrinsics_Estimation", {}),
             # ("Blink_Detection", {}),
             # ("Fixation_Detector", {}),
+            # ("Surface_Tracker", {}),
             ("Hips_Surface_Tracker", {}),
             # ("Page_Tracker", {}),
             ("Plugin_Manager", {}),
