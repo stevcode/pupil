@@ -28,6 +28,9 @@ from math import sqrt
 sqrt_2 = sqrt(2)
 
 
+######################################################################
+
+
 # SIFT initialization
 upper_left = cv2.imread(r'C:\work\maze-nc-int-1.jpg', cv2.IMREAD_GRAYSCALE)
 
@@ -40,6 +43,77 @@ cv2.imshow("Reference", upper_left)
 index_params = dict(algorithm=0, trees=5)
 search_params = dict()
 flann = cv2.FlannBasedMatcher(index_params,search_params)
+
+
+def homography(gray_frame):
+    gray_frame_key_points, gray_frame_descriptors = sift.detectAndCompute(gray_frame, None)
+    # gray_frame = cv2.drawKeypoints(gray_frame, gray_frame_key_points, gray_frame)
+    # cv2.imshow("Test", gray_frame)
+
+    matches = flann.knnMatch(upper_left_descriptors, gray_frame_descriptors, k=2)
+    good_matches = []
+    for m, n in matches:
+        if m.distance < n.distance * 0.8:
+            good_matches.append(m)
+
+    # im3 = cv2.drawMatches(upper_left, upper_left_key_points, gray_frame, gray_frame_key_points, good_matches, gray_frame)
+    # cv2.imshow("Matches", im3)
+
+    if len(good_matches) > 10:
+        query_points = np.float32([upper_left_key_points[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+        train_points = np.float32([gray_frame_key_points[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+
+        matrix, mask = cv2.findHomography(query_points, train_points, cv2.RANSAC, 5.0)
+        matches_mask = mask.ravel().tolist()
+        if matrix is not None:  # and matrix.any():
+            h, w, _ = upper_left.shape
+            pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
+            dst = cv2.perspectiveTransform(pts, matrix)
+
+            homography_blah = cv2.polylines(gray_frame, [np.int32(dst)], True, (255, 0, 0), 3)
+            cv2.imshow("Matches", homography_blah)
+        else:
+            cv2.imshow("Matches", gray_frame)
+    else:
+        cv2.imshow("Matches", gray_frame)
+
+
+def line_detection(gray_img, img):
+    #  https://www.youtube.com/watch?v=KEYzUP7-kkU
+    edges = cv2.Canny(gray_img, 75, 150)
+    # edges = cv2.Canny(gray_img, 50, 200, None, 3)
+    # lines = cv2.HoughLinesP(edges, 2, np.pi / 180, 30)
+    lines = cv2.HoughLinesP(edges, 2, np.pi / 90, 30)
+
+    if lines is not None:
+        for line in lines:
+            x1, y1, x2, y2 = line[0]
+            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3, cv2.LINE_AA)
+
+        # print(len(lines))
+
+    cv2.imshow("Lines", img)
+
+
+def corner_detection(gray_img, img):
+    #  https://www.youtube.com/watch?v=ROjDoDqsnP8
+    corners = cv2.goodFeaturesToTrack(gray_img, 1000, 0.1, 10)
+    if corners is not None:
+        corners = np.int0(corners)
+
+        for corner in corners:
+            x, y = corner.ravel()
+            cv2.circle(img, (x, y), 5, (0, 255, 0), -1)
+    cv2.imshow("Lines", img)
+
+
+def opencv_testing(gray_img, img):
+    #harris corner detec + subpix
+    pass
+
+
+#####################################################################
+
 
 def get_close_markers(markers, centroids=None, min_distance=20):
     if centroids is None:
@@ -168,75 +242,12 @@ def correct_gradient(gray_img, r):
         return True
 
 
-def homography(gray_frame):
-    gray_frame_key_points, gray_frame_descriptors = sift.detectAndCompute(gray_frame, None)
-    # gray_frame = cv2.drawKeypoints(gray_frame, gray_frame_key_points, gray_frame)
-    # cv2.imshow("Test", gray_frame)
-
-    matches = flann.knnMatch(upper_left_descriptors, gray_frame_descriptors, k=2)
-    good_matches = []
-    for m, n in matches:
-        if m.distance < n.distance * 0.8:
-            good_matches.append(m)
-
-    # im3 = cv2.drawMatches(upper_left, upper_left_key_points, gray_frame, gray_frame_key_points, good_matches, gray_frame)
-    # cv2.imshow("Matches", im3)
-
-    if len(good_matches) > 10:
-        query_points = np.float32([upper_left_key_points[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-        train_points = np.float32([gray_frame_key_points[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
-
-        matrix, mask = cv2.findHomography(query_points, train_points, cv2.RANSAC, 5.0)
-        matches_mask = mask.ravel().tolist()
-        if matrix is not None: # and matrix.any():
-            h, w, _ = upper_left.shape
-            pts = np.float32([[0, 0], [0, h], [w, h], [w, 0]]).reshape(-1, 1, 2)
-            dst = cv2.perspectiveTransform(pts, matrix)
-
-            homography_blah = cv2.polylines(gray_frame, [np.int32(dst)], True, (255, 0, 0), 3)
-            cv2.imshow("Matches", homography_blah)
-        else:
-            cv2.imshow("Matches", gray_frame)
-    else:
-        cv2.imshow("Matches", gray_frame)
-
-
-def line_detection(gray_img, img):
-    #  https://www.youtube.com/watch?v=KEYzUP7-kkU
-    edges = cv2.Canny(gray_img, 75, 150)
-    # edges = cv2.Canny(gray_img, 50, 200, None, 3)
-    # lines = cv2.HoughLinesP(edges, 2, np.pi / 180, 30)
-    lines = cv2.HoughLinesP(edges, 2, np.pi / 90, 30)
-
-    if lines is not None:
-        for line in lines:
-            x1, y1, x2, y2 = line[0]
-            cv2.line(img, (x1, y1), (x2, y2), (255, 0, 0), 3, cv2.LINE_AA)
-
-        # print(len(lines))
-
-    cv2.imshow("Lines", img)
-
-
-def corner_detection(gray_img, img):
-    #  https://www.youtube.com/watch?v=ROjDoDqsnP8
-    corners = cv2.goodFeaturesToTrack(gray_img, 1000, 0.1, 10)
-    if corners is not None:
-        corners = np.int0(corners)
-
-        for corner in corners:
-            x, y = corner.ravel()
-            cv2.circle(img, (x, y), 5, (0, 255, 0), -1)
-    cv2.imshow("Lines", img)
-
-
 def detect_hips_markers(frame, gray_img, grid_size, min_marker_perimeter=40, aperture=11, visualize=False):
     img = frame.img
 
-    undist_img = frame.undistorted_img
-    undist_gray = cv2.cvtColor(undist_img, cv2.COLOR_BGR2GRAY)
+    opencv_testing(gray_img, img)
     # corner_detection(gray_img, img)
-    line_detection(undist_gray, undist_img)
+    line_detection(gray_img, img)
 
 
     edges = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, aperture, 9)
