@@ -205,9 +205,6 @@ def homography(gray_frame):
 def detect_markers(
     gray_img, grid_size, min_marker_perimeter=40, aperture=11, visualize=False
 ):
-
-    # homography(gray_img)
-
     edges = cv2.adaptiveThreshold(
         gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, aperture, 9
     )

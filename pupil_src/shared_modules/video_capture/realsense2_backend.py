@@ -62,6 +62,7 @@ class ColorFrame(object):
 
         self._bgr = None
         self._gray = None
+        self.undistorted_img = None
 
     @property
     def height(self):

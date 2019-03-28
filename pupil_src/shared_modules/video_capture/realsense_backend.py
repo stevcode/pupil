@@ -55,6 +55,7 @@ class ColorFrame(object):
         self._yuv[y_plane + u_plane :] = self._yuv422[:, 1::2, 1].flatten()
         self._bgr = None
         self._gray = None
+        self.undistorted_img = None
 
     @property
     def height(self):
