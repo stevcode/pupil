@@ -110,7 +110,7 @@ class UVC_Source(Base_Source):
             )
             self.name_backup = preferred_names
             self.frame_size_backup = frame_size
-            self.frame_rate_backup = frame_rate
+            self.frame_rate_backup = 60
             self.exposure_time_backup = None
             self._intrinsics = load_intrinsics(
                 self.g_pool.user_dir, self.name, self.frame_size
@@ -119,7 +119,7 @@ class UVC_Source(Base_Source):
             self.configure_capture(frame_size, frame_rate, uvc_controls)
             self.name_backup = (self.name,)
             self.frame_size_backup = frame_size
-            self.frame_rate_backup = frame_rate
+            self.frame_rate_backup = 60
             controls_dict = dict(
                 [(c.display_name, c) for c in self.uvc_capture.controls]
             )
