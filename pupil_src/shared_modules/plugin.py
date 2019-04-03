@@ -265,14 +265,34 @@ class Plugin(object):
         self.menu_icon.order = 0.5
         self.menu_icon.tooltip = self.pretty_class_name
         self.g_pool.menubar.append(self.menu)
-        self.g_pool.iconbar.append(self.menu_icon)
+        is_menu_icon_allowed = True
+        try:
+            is_menu_icon_allowed = self.class_name != "UVC_Source"
+        except:
+            is_menu_icon_allowed = True
+
+        if is_menu_icon_allowed:
+            self.g_pool.iconbar.append(self.menu_icon)
+        # self.g_pool.iconbar.append(self.menu_icon)
         toggle_menu(False)
 
     def remove_menu(self):
-        if not self.menu.collapsed:
+        try:
+            if not self.menu.collapsed:
+                self.g_pool.menubar.collapsed = True
+            self.g_pool.menubar.remove(self.menu)
+        except:
             self.g_pool.menubar.collapsed = True
-        self.g_pool.menubar.remove(self.menu)
-        self.g_pool.iconbar.remove(self.menu_icon)
+
+        is_menu_icon_allowed = True
+        try:
+            is_menu_icon_allowed = self.class_name != "UVC_Source" and self.class_name != "UVC_Manager"
+        except:
+            pass
+
+        if is_menu_icon_allowed:
+            self.g_pool.iconbar.remove(self.menu_icon)
+        # self.g_pool.iconbar.remove(self.menu_icon)
         self.menu = None
         self.menu_icon = None
 
