@@ -447,12 +447,12 @@ def eye(
             label_font="pupil_icons",
         )
         icon.tooltip = "General Settings"
-        g_pool.iconbar.append(icon)
+        # g_pool.iconbar.append(icon)
         toggle_general_settings(False)
 
         g_pool.pupil_detector.init_ui()
         g_pool.capture.init_ui()
-        g_pool.capture_manager.init_ui()
+        # g_pool.capture_manager.init_ui()
         g_pool.writer = None
 
         def replace_source(source_class_name, source_settings):
