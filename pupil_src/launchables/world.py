@@ -242,7 +242,7 @@ def world(
             Blink_Detection,
             # Remote_Recorder,
             Accuracy_Visualizer,
-            Camera_Intrinsics_Estimation,
+            # Camera_Intrinsics_Estimation,
             # Hololens_Relay,
         ]
         system_plugins = (
