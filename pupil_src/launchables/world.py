@@ -534,7 +534,7 @@ def world(
         )
 
         general_settings.append(
-            ui.Info_Text("Capture Version: {}_c19.02.22".format(g_pool.version))
+            ui.Info_Text("Capture Version: {}_c19.04.03".format(g_pool.version))
         )
         # general_settings.append(
         #     ui.Button("Restart with default settings", reset_restart)

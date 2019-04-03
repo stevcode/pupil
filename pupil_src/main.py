@@ -23,12 +23,12 @@ parsed_args, unknown_args = launchable_args.parse(running_from_bundle, **default
 
 if running_from_bundle:
     # Specifiy user dir.
-    folder_name = "pupil_{}_settings".format(parsed_args.app) + "_c19.02.22"     # SC - Should only need to handle custom user dir here and 4 lines below
+    folder_name = "pupil_{}_settings".format(parsed_args.app) + "_c19.04.03"     # SC - Should only need to handle custom user dir here and 4 lines below
     user_dir = os.path.expanduser(os.path.join("~", folder_name))
     version_file = os.path.join(sys._MEIPASS, "_version_string_")
 else:
     # Specifiy user dir.
-    user_dir = os.path.join(pupil_base_dir, "{}_settings".format(parsed_args.app) + "_c19.02.22")
+    user_dir = os.path.join(pupil_base_dir, "{}_settings".format(parsed_args.app) + "_c19.04.03")
     version_file = None
 
 # create folder for user settings, tmp data
