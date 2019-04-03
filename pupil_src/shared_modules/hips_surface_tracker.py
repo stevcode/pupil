@@ -342,10 +342,10 @@ class Hips_Surface_Tracker(Plugin):
         # else:
         #     self.button.status_text = "tracking paused"
 
-        if self.is_solving_maze:
-            self.button.on_color[:] = (0.0, 1, 0.0, 0.8)
-        else:
-            self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
+        # if self.is_solving_maze:
+        #     self.button.on_color[:] = (0.0, 1, 0.0, 0.8)
+        # else:
+        #     self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
 
         if self.mode == "Show Markers and Surfaces":
             # edit surfaces by user
