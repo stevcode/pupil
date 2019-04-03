@@ -196,7 +196,7 @@ def world(
         window_size = None
         window_size_default = (1920 + icon_bar_width, 1080)
         camera_render_size = None
-        hdpi_factor = 1.0
+        hdpi_factor = 1.4
 
         # g_pool holds variables for this process they are accessible to all plugins
         g_pool = Global_Container()
