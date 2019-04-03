@@ -258,6 +258,8 @@ class Hips_Surface_Tracker(Plugin):
         button_text = "End Form" if self.is_solving_maze else "Begin Form"
         self.menu.append(ui.Button(button_text, lambda: self.solve_maze("_")))
 
+        self.menu.append(ui.Info_Text("Capture Version: {}_c19.04.03".format(self.g_pool.version)))
+
     def set_maze(self, new_form):
         if self.is_solving_maze:
             self.toggle_form_state()
