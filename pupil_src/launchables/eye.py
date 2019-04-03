@@ -191,6 +191,7 @@ def eye(
 
         g_pool.get_timestamp = get_timestamp
         g_pool.get_now = get_time_monotonic
+        g_pool.is_changing = False
 
         # Callback functions
         def on_resize(window, w, h):
@@ -214,6 +215,14 @@ def eye(
 
         def on_window_key(window, key, scancode, action, mods):
             g_pool.gui.update_key(key, scancode, action, mods)
+            if scancode == 30 and not g_pool.is_changing and action == 1:
+                g_pool.is_changing = True
+                if g_pool.display_mode == "camera_image":
+                    set_display_mode_info("algorithm")
+                else:
+                    set_display_mode_info("camera_image")
+                g_pool.is_changing = False
+
 
         def on_window_char(window, char):
             g_pool.gui.update_char(char)
