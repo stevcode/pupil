@@ -299,7 +299,7 @@ def world(
         default_plugins = [
             ("UVC_Source", default_capture_settings),
             ("Pupil_Data_Relay", {}),
-            ("UVC_Manager", {}),
+            # ("UVC_Manager", {}),
             ("Log_Display", {}),
             ("Dummy_Gaze_Mapper", {}),
             ("Display_Recent_Gaze", {}),
@@ -551,7 +551,7 @@ def world(
             label_font="pupil_icons",
         )
         icon.tooltip = "General Settings"
-        g_pool.iconbar.append(icon)
+        # g_pool.iconbar.append(icon)
 
         user_plugin_separator = ui.Separator()
         user_plugin_separator.order = 0.35
