@@ -286,6 +286,18 @@ class Recorder(System_Plugin_Base):
                     timestamp = notification.get("timestamp", "ERROR")
                     self.user_info[form_name] = timestamp
 
+        elif notification["subject"] == "calibration.started":
+            if not self.running:
+                logger.info("Recording not yet started, can't begin calibration.")
+            else:
+                self.user_info["Calibration Start"] = self.g_pool.get_timestamp()
+
+        elif notification["subject"] == "calibration.stopped":
+            if not self.running:
+                logger.info("Recording not yet started, can't end calibration.")
+            else:
+                self.user_info["Calibration Stop"] = self.g_pool.get_timestamp()
+
 
     def get_rec_time_str(self):
         rec_time = gmtime(time() - self.start_time)
