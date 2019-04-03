@@ -172,7 +172,7 @@ def eye(
         icon_bar_width = 50
         window_size = None
         camera_render_size = None
-        hdpi_factor = 1.0
+        hdpi_factor = 1.2
 
         # g_pool holds variables for this process
         g_pool = Global_Container()
