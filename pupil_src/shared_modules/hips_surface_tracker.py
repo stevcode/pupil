@@ -84,6 +84,9 @@ class Hips_Surface_Tracker(Plugin):
         self.add_button = None
         self.is_solving_maze = False
 
+        self.subject_id = "UNSET"
+        self.light_level = "UNSET"
+
     def load_surface_definitions_from_folder(self):
         # all registered surfaces
         self.surface_definitions = self.import_surfaces(
@@ -194,9 +197,6 @@ class Hips_Surface_Tracker(Plugin):
         self.update_gui_markers()
         self.notify_all({"subject": "surfaces_changed"})
 
-    def capture_fiducial(self, _):
-        pass
-
     def init_ui(self):
         self.add_menu()
         self.menu.label = "HIPS Surface Tracker"
@@ -217,26 +217,26 @@ class Hips_Surface_Tracker(Plugin):
         self.menu.elements[:] = []
         self.menu.append(ui.Info_Text(
                 "This plugin detects and tracks fiducial markers Hidden In Plain Sight in the scene."))
-        self.menu.append(ui.Switch("robust_detection", self, label="Robust detection"))
-        self.menu.append(ui.Switch("locate_3d", self, label="3D localization"))
+        # self.menu.append(ui.Switch("robust_detection", self, label="Robust detection"))
+        # self.menu.append(ui.Switch("locate_3d", self, label="3D localization"))
 
-        # for s in self.surfaces:
-        #     idx = self.surfaces.index(s)
-        #     s_menu = ui.Growing_Menu("Surface {}".format(idx))
-        #     s_menu.collapsed = True
-        #     s_menu.append(ui.Text_Input("name", s))
-        #     s_menu.append(ui.Text_Input("x", s.real_world_size, label="X size"))
-        #     s_menu.append(ui.Text_Input("y", s.real_world_size, label="Y size"))
-        #     s_menu.append(ui.Text_Input("gaze_history_length", s, label="Gaze History Length [seconds]"))
-        #     s_menu.append(ui.Button("Open Debug Window", s.open_close_window))
-        #
-        #     # closure to encapsulate idx
-        #     def make_remove_s(i):
-        #         return lambda: self.remove_surface(i)
-        #
-        #     remove_s = make_remove_s(idx)
-        #     s_menu.append(ui.Button("remove", remove_s))
-        #     self.menu.append(s_menu)
+        self.menu.append(
+            ui.Text_Input(
+                "subject_id",
+                self,
+                setter=self.set_subject_id,
+                label="Subject ID",
+            )
+        )
+
+        self.menu.append(
+                ui.Text_Input(
+                        "light_level",
+                        self,
+                        setter=self.set_light_level,
+                        label="Light Level",
+                )
+        )
 
         self.menu.append(
             ui.Selector(
@@ -254,17 +254,38 @@ class Hips_Surface_Tracker(Plugin):
                     "Symbol-Digit (SYM)",
                     "Symbol-Digit (DI)",
                 ],
-                label="Select Maze Form", ))
-        button_text = "End maze." if self.is_solving_maze else "Begin maze."
+                label="Select Form", ))
+        button_text = "End Form" if self.is_solving_maze else "Begin Form"
         self.menu.append(ui.Button(button_text, lambda: self.solve_maze("_")))
 
     def set_maze(self, new_form):
+        if self.is_solving_maze:
+            self.toggle_form_state()
         self.current_maze_form = new_form
         self.update_gui_markers()
 
     def solve_maze(self, _):
-        self.is_solving_maze = not self.is_solving_maze
+        self.toggle_form_state()
         self.update_gui_markers()
+
+    def toggle_form_state(self):
+        if self.current_maze_form == "None" and not self.is_solving_maze:
+            return
+
+        self.notify_recorder_plugin()
+        self.is_solving_maze = not self.is_solving_maze
+
+    def notify_recorder_plugin(self):
+        subject_msg = "form.end" if self.is_solving_maze else "form.begin"
+        self.notify_all(
+            {
+                "subject": subject_msg,
+                "subject_id": self.subject_id,
+                "light_level": self.light_level,
+                "form_name": self.current_maze_form,
+                "timestamp": self.g_pool.get_timestamp(),
+            }
+        )
 
     def recent_events(self, events):
         frame = events.get("frame")
@@ -327,8 +348,6 @@ class Hips_Surface_Tracker(Plugin):
                     if s.detected:
                         new_pos = s.img_to_ref_surface(np.array(pos))
                         s.move_vertex(v_idx, new_pos)
-
-
 
     def get_init_dict(self):
         return {
@@ -394,3 +413,15 @@ class Hips_Surface_Tracker(Plugin):
 
         for s in self.surfaces:
             s.cleanup()
+
+    def set_subject_id(self, val):
+        if not val:
+            self.subject_id = "UNSET"
+        else:
+            self.subject_id = val
+
+    def set_light_level(self, val):
+        if not val:
+            self.light_level = "UNSET"
+        else:
+            self.light_level = val

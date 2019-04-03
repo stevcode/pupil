@@ -57,7 +57,7 @@ class Recorder(System_Plugin_Base):
         g_pool,
         session_name=get_auto_name(),
         rec_root_dir=None,
-        user_info={"name": "", "additional_field": "change_me"},
+        user_info={"subject_id": "UNSET", "light_level": "UNSET"},
         info_menu_conf={},
         show_info_menu=False,
         record_eye=True,
@@ -224,6 +224,8 @@ class Recorder(System_Plugin_Base):
                     start with `/` to ingore the rec base dir and start from root instead.
                 - `record_eye` boolean that indicates recording of the eyes, defaults to current setting
             ``recording.should_stop``: Stops current recording session
+            ``form.begin``: Timestamps the starting time of a form session and saves it to user_info.csv
+            ``form.end``: Timestamps the end time of a form session and saves it to user_info.csv
 
         Emits notifications:
             ``recording.started``: New recording session started
@@ -259,6 +261,31 @@ class Recorder(System_Plugin_Base):
                 self.stop()
             else:
                 logger.info("Recording already stopped!")
+
+        elif notification["subject"] == "form.begin":
+            if not self.running:
+                logger.info("Recording not yet started, can't begin form.")
+            else:
+                self.user_info["subject_id"] = notification.get("subject_id", "UNSET")
+                self.user_info["light_level"] = notification.get("light_level", "UNSET")
+                form_name = notification.get("form_name", "None")
+                if form_name != "None":
+                    form_name = form_name + " Begin"
+                    timestamp = notification.get("timestamp", "ERROR")
+                    self.user_info[form_name] = timestamp
+
+        elif notification["subject"] == "form.end":
+            if not self.running:
+                logger.info("Recording not yet started, can't end form.")
+            else:
+                self.user_info["subject_id"] = notification.get("subject_id", "UNSET")
+                self.user_info["light_level"] = notification.get("light_level", "UNSET")
+                form_name = notification.get("form_name", "None")
+                if form_name != "None":
+                    form_name = form_name + " End"
+                    timestamp = notification.get("timestamp", "ERROR")
+                    self.user_info[form_name] = timestamp
+
 
     def get_rec_time_str(self):
         rec_time = gmtime(time() - self.start_time)
