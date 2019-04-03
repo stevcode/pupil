@@ -223,7 +223,6 @@ def eye(
                     set_display_mode_info("camera_image")
                 g_pool.is_changing = False
 
-
         def on_window_char(window, char):
             g_pool.gui.update_char(char)
 
@@ -457,7 +456,7 @@ def eye(
         )
         icon.tooltip = "General Settings"
         # g_pool.iconbar.append(icon)
-        toggle_general_settings(False)
+        # toggle_general_settings(True)
 
         g_pool.pupil_detector.init_ui()
         g_pool.capture.init_ui()
@@ -490,6 +489,8 @@ def eye(
         glfw.glfwSetCursorPosCallback(main_window, on_pos)
         glfw.glfwSetScrollCallback(main_window, on_scroll)
         glfw.glfwSetDropCallback(main_window, on_drop)
+
+        toggle_general_settings(True)
 
         # load last gui configuration
         g_pool.gui.configuration = session_settings.get("ui_config", {})
