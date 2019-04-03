@@ -202,7 +202,7 @@ class Hips_Surface_Tracker(Plugin):
         self.menu.label = "HIPS Surface Tracker"
 
         self.button = ui.Thumb("running", self, label="S", hotkey="s")
-        self.button.on_color[:] = (0.1, 0.2, 1.0, 0.8)
+        self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
         self.g_pool.quickbar.append(self.button)
 
         self.update_gui_markers()
@@ -335,10 +335,15 @@ class Hips_Surface_Tracker(Plugin):
                     "camera_pose_3d": s.camera_pose_3d.tolist() if s.camera_pose_3d is not None else None, }
                 events["surfaces"].append(datum)
 
-        if self.running:
-            self.button.status_text = "{}/{}".format(len([s for s in self.surfaces if s.detected]), len(self.surfaces))
+        # if self.running:
+        #     self.button.status_text = "{}/{}".format(len([s for s in self.surfaces if s.detected]), len(self.surfaces))
+        # else:
+        #     self.button.status_text = "tracking paused"
+
+        if self.is_solving_maze:
+            self.button.on_color[:] = (0.0, 1, 0.0, 0.8)
         else:
-            self.button.status_text = "tracking paused"
+            self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
 
         if self.mode == "Show Markers and Surfaces":
             # edit surfaces by user
