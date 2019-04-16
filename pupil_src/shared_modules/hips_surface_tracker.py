@@ -47,7 +47,7 @@ class Hips_Surface_Tracker(Plugin):
         self,
         g_pool,
         mode="Show Markers and Surfaces",
-        min_marker_perimeter=60,
+        min_marker_perimeter=60,            # This variable isn't needed. Used to measure perimeter of detected contours to make sure they are large enough to bother with. We don't use conours
         invert_image=False,
         robust_detection=True,
     ):
@@ -71,7 +71,7 @@ class Hips_Surface_Tracker(Plugin):
 
         self.robust_detection = robust_detection
         self.aperture = 11
-        self.min_marker_perimeter = min_marker_perimeter
+        self.min_marker_perimeter = min_marker_perimeter  # This variable isn't needed. Used to measure perimeter of detected contours to make sure they are large enough to bother with. We don't use conours
         self.min_id_confidence = 0.0
         self.locate_3d = False
         self.invert_image = invert_image
@@ -87,6 +87,7 @@ class Hips_Surface_Tracker(Plugin):
         self.subject_id = "UNSET"
         self.light_level = "UNSET"
 
+    # TODO: Probably remove this, or repurposed to load MazeGridCodes
     def load_surface_definitions_from_folder(self):
         # all registered surfaces
         self.surface_definitions = self.import_surfaces(
@@ -312,9 +313,13 @@ class Hips_Surface_Tracker(Plugin):
             if self.invert_image:
                 gray = 255 - gray
 
-            # self.markers = detect_hips_markers(frame, gray, grid_size=5, aperture=self.aperture, min_marker_perimeter=self.min_marker_perimeter, )
+            self.markers = detect_hips_markers(frame, gray)
+
+
+
+
             # if self.robust_detection:
-            #     self.markers = detect_markers_robust(gray, grid_size=5, aperture=self.aperture,
+            #     self.markers = detect_markers_robust(gray, grid_size=4, aperture=self.aperture,
             #             prev_markers=self.markers, true_detect_every_frame=3,
             #             min_marker_perimeter=self.min_marker_perimeter, )
             # else:

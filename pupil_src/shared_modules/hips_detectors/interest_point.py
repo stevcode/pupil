@@ -2,6 +2,8 @@ import cv2
 
 import numpy as np
 
+from statistics import median_grouped
+
 
 class InterestPoint:
     def __init__(self, sub_pixel_point):
@@ -39,14 +41,15 @@ class InterestPoint:
         distances = smallest_x_distances + smallest_y_distances
         if not distances:
             return 1
-        avg = sum(distances) / len(distances)
+        # avg = sum(distances) / len(distances)
+        avg = median_grouped(distances)
         if avg < float('inf'):
             grid_size = int(avg)
         else:
             grid_size = 1
         return grid_size
 
-    # @staticmethod
+    @staticmethod
     def top_left_point(i_points, grid_size):
         if not i_points:
             return

@@ -268,7 +268,7 @@ def find_maze_corners(frame, gray_img, feature_detector, pattern_size=(4, 4), ou
 
 
 # GoodFeaturesToTrack params
-gftt_params = dict(maxCorners=1000, qualityLevel=0.1, minDistance=10)
+gftt_params = dict(maxCorners=500, qualityLevel=0.1, minDistance=10)
 # maxCorners=1000, 500
 # qualityLevel=0.1, 0.01
 # minDistance=10
@@ -281,19 +281,21 @@ def custom_finder(frame, gray_img):
     corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
     # Convert GFTTs to boxes and display
     points = [p[0] for p in corners]
-    grid_size = InterestPoint.calculate_grid_size(points)
-    half_grid = int(grid_size / 2)
+    # grid_size = InterestPoint.calculate_grid_size(points)
+    # half_grid = int(grid_size / 2)
     i_points = []
     for c in corners:
         pt = c[0]
         i_point = InterestPoint(pt)
         i_points.append(i_point)
 
-    for i_point in i_points:
-        matching_i_points = MazeGridCode.test_find(gray_img, i_point, i_points, grid_size)
-        if matching_i_points:
-            print("**********************MATCH FOUND************************")
-            cv2.imshow("Find QR", gray_img)
+    # for i_point in i_points:
+    #     matching_i_points = MazeGridCode.test_find(gray_img, i_point, i_points, grid_size)
+    #     if matching_i_points:
+    #         print("**********************MATCH FOUND************************")
+    #         cv2.imshow("Find QR", gray_img)
+
+    MazeGridCode.scale_test_find(img, gray_img, i_points)
 
     # points = []
     # corners = cv2.goodFeaturesToTrack(gray_img, 1000, 0.1, 10)
@@ -313,6 +315,7 @@ def custom_finder(frame, gray_img):
     #
     # cv2.imshow("Custom", threshold_image)
 
+
 def image_histogram_based_thresholding(img):
     # https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_thresholding/py_thresholding.html
     # Using Otsu's Binarization to start.
@@ -322,6 +325,7 @@ def image_histogram_based_thresholding(img):
     blurred_img = cv2.GaussianBlur(img, (5,5), 0)
     ret, otsu_threshold_img = cv2.threshold(blurred_img, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)   # definition has a problem, especially when hand is added
     return otsu_threshold_img
+
 
 # https://github.com/opencv/opencv/blob/1913482cf5d257d7da292bb2c15f22d0588d34dc/modules/calib3d/src/calibinit.cpp#L224
 class MazeDetector:
@@ -380,6 +384,7 @@ class MazeDetector:
         # cv2.drawContours(color_img, no_hole_contours, -1, (0, 0, 255), 3)
 
         cv2.imshow("ChessBoardTest", color_img)
+
 
 # modules/calib3d/src/circlesgrid.cpp/hpp
 class CirclesGridFinder:
@@ -475,11 +480,13 @@ class CirclesGridFinder:
     def get_holes(self, centers):
         pass
 
+
 def contains(rectangle, point):
     x_pos, y_pos = point
     x, y, h, w = rectangle
 
     return x <= x_pos and x_pos < x + w and y <= y_pos and y_pos < y + h
+
 
 class CirclesGraph:
     def __init__(self, size):
@@ -551,8 +558,8 @@ def get_close_markers(markers, centroids=None, min_distance=20):
     return full_idx(close_pairs)
 
 
-def decode(square_img, grid):
-    step = square_img.shape[0] / grid
+def decode(square_img, grid_side_cell_count):
+    step = square_img.shape[0] / grid_side_cell_count
     start = step / 2
     # look only at the center point of each grid cell
     # msg = square_img[start::step,start::step]
@@ -659,51 +666,30 @@ def correct_gradient(gray_img, r):
         return True
 
 
-def detect_hips_markers(frame, gray_img, grid_size, min_marker_perimeter=40, aperture=11, visualize=False):
-    img = frame.img
+def detect_hips_markers(frame, gray_img, grid_side_cell_count=4, min_marker_perimeter=40, aperture=11, visualize=False):
+    color_img = frame.img
 
-    # line_detector(frame, img, gray_img)
-    # corner_detection(gray_img, img)
-    # line_detection(gray_img, img)
+    GRID_CELL_SIDE_LENGTH = 50   # I assume this is pixels
+    grid_side_length = GRID_CELL_SIDE_LENGTH * grid_side_cell_count
 
-    # find_maze_corners(frame, gray_img, sift)
+    # top left,bottom left, bottom right, top right in image
+    mapped_space = np.array(((0, 0), (grid_side_length, 0), (grid_side_length, grid_side_length), (0, grid_side_length)), dtype=np.float32).reshape(4, 1, 2)
+
 
     custom_finder(frame, gray_img)
 
+    # TODO: See if better features detected with this instead of utso
     # edges = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, aperture, 9)
+
+
+    #Get Corners
+    # corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
     #
-    # _img, contours, hierarchy = cv2.findContours(edges, mode=cv2.RETR_TREE, method=cv2.CHAIN_APPROX_SIMPLE,
-    #         offset=(0, 0))  # TC89_KCOS
-    #
-    # # remove extra encapsulation
-    # hierarchy = hierarchy[0]
-    # contours = np.array(contours)
-    # # keep only contours                        with parents     and      children
-    # contained_contours = contours[np.logical_and(hierarchy[:, 3] >= 0, hierarchy[:, 2] >= 0)]
-    # # turn on to debug contours
-    # # cv2.drawContours(gray_img, contours,-1, (0,255,255))
-    # # cv2.drawContours(gray_img, aprox_contours,-1, (255,0,0))
-    #
-    # # contained_contours = contours #overwrite parent children check
-    #
-    # # filter out rects
-    # aprox_contours = [cv2.approxPolyDP(c, epsilon=2.5, closed=True) for c in contained_contours]
-    #
-    # # any rectagle will be made of 4 segemnts in its approximation
-    # # also we dont need to find a marker so small that we cannot read it in the end...
-    # # also we want all contours to be counter clockwise oriented, we use convex hull fot this:
-    # rect_cand = [cv2.convexHull(c, clockwise=True) for c in aprox_contours if
-    #     c.shape[0] == 4 and cv2.arcLength(c, closed=True) > min_marker_perimeter]
-    # # a non convex quadrangle is not what we are looking for.
-    # rect_cand = [r for r in rect_cand if r.shape[0] == 4]
-    #
-    # if visualize:
-    #     cv2.drawContours(gray_img, rect_cand, -1, (255, 100, 50))
-    #
+    # criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 40, 0.001)
+    # cv2.cornerSubPix(gray_img, r, (3, 3), (-1, -1), criteria)
+
     markers = []
-    # size = 20 * grid_size
-    # # top left,bottom left, bottom right, top right in image
-    # mapped_space = np.array(((0, 0), (size, 0), (size, size), (0, size)), dtype=np.float32).reshape(4, 1, 2)
+
     # for r in rect_cand:
     #     if correct_gradient(gray_img, r):
     #         r = np.float32(r)
@@ -723,7 +709,7 @@ def detect_hips_markers(frame, gray_img, grid_size, min_marker_perimeter=40, ape
     #         cv2.erode(otsu, kernel, otsu, iterations=3)
     #         # kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3,3))
     #         # cv2.dilate(otsu,kernel,otsu, iterations=1)
-    #         marker = decode(otsu, grid_size)
+    #         marker = decode(otsu, grid_side_cell_count)
     #         if marker is not None:
     #             angle, msg, soft_msg, msg_img = marker
     #

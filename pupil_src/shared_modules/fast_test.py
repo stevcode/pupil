@@ -1,9 +1,12 @@
 import cv2
 import uvc
 import numpy as np
+import math
 
 from hips_detectors.interest_point import InterestPoint
 from hips_detectors.maze_grid_code import MazeGridCode
+
+from camera_models import Radial_Dist_Camera
 
 
 # region Pupil World Camera Initialization
@@ -35,6 +38,18 @@ cap = uvc_capture
 
 # endregion
 
+# region Camera Intrinsics Setup
+
+camera_matrix = [[829.3510515270362, 0.0, 659.9293047259697],
+                 [0.0, 799.5709408845464, 373.0776462356668],
+                 [0.0, 0.0, 1.0], ]
+
+dist_coefs = [[-0.43738542863224966, 0.190570781428104, -0.00125233833830639, 0.0018723428760170056, -0.039219091259637684,]]
+
+camera_model = Radial_Dist_Camera(camera_matrix, dist_coefs, (1280, 720), name)
+
+# endregion
+
 
 def image_histogram_based_thresholding(img):
     # https://docs.opencv.org/3.0-beta/doc/py_tutorials/py_imgproc/py_thresholding/py_thresholding.html
@@ -49,45 +64,62 @@ def image_histogram_based_thresholding(img):
 
 
 def locating(frame, color_img, gray_img, is_drawing=False):
+    # threshold_image = image_histogram_based_thresholding(gray_img)
+    #
+    # # So we can find rectangles that go to the edge, we draw a white line around the image edge.
+    # # Otherwise, find_contours will miss those clipped rectangle contours.
+    # # The border color will be the image mean, because otherwise we risk screwing up filters like cv2.smooth
+    # image_height, image_width = threshold_image.shape
+    # cv2.rectangle(threshold_image, (0,0), (image_width, image_height), (0,0,0), 5, cv2.LINE_8)
+    #
+    # _img2, contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    # hierarchy = hierarchy[0]
+    #
+    # if not contours:
+    #     print("No Contours")
+    #     return
+    #
+    # no_parent_contours = []
+    # for i in range(len(contours) - 1, -1, -1):
+    #     if hierarchy[i][2] == -1:
+    #         continue
+    #
+    #     contour = contours[i]
+    #     no_parent_contours.append(contour)
+    #
+    #     # x, y, w, h = cv2.boundingRect(contour)
+    #     # cv2.rectangle(color_img, (x, y), (x + w, y + h), (0, 0, 255), 3)
+    #
+    # if not no_parent_contours:
+    #     print("No Parentless Contours, falling back to all contours")
+    #     no_parent_contours = contours
+    #
+    # largest_contours = sorted(no_parent_contours, key=lambda c: cv2.contourArea(c), reverse=True)
+    # largest_contours = largest_contours[:1]
+    # largest_contour = largest_contours[0]
+    #
+    # if is_drawing:
+    #     cv2.drawContours(color_img, [largest_contour], -1, (0, 255, 0), 3)
+    # # cv2.imshow("Location Testing", color_img)
+    #
+    # return largest_contour
+
     threshold_image = image_histogram_based_thresholding(gray_img)
+    edges = cv2.adaptiveThreshold(gray_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 9)
+    # Initiate STAR detector
+    orb = cv2.ORB_create()
+    fast = cv2.FastFeatureDetector_create()
 
-    # So we can find rectangles that go to the edge, we draw a white line around the image edge.
-    # Otherwise, find_contours will miss those clipped rectangle contours.
-    # The border color will be the image mean, because otherwise we risk screwing up filters like cv2.smooth
-    image_height, image_width = threshold_image.shape
-    cv2.rectangle(threshold_image, (0,0), (image_width, image_height), (0,0,0), 5, cv2.LINE_8)
+    # Initiate BRIEF extractor
+    # brief = cv2.DescriptorExtractor_create("BRIEF")
 
-    _img2, contours, hierarchy = cv2.findContours(threshold_image, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    hierarchy = hierarchy[0]
+    # find the keypoints with STAR
+    kp = fast.detect(gray_img, None)
+    cv2.drawKeypoints(color_img, kp, color_img)
+    cv2.imshow("Location Testing", color_img)
 
-    if not contours:
-        print("No Contours")
-        return
-
-    no_parent_contours = []
-    for i in range(len(contours) - 1, -1, -1):
-        if hierarchy[i][2] == -1:
-            continue
-
-        contour = contours[i]
-        no_parent_contours.append(contour)
-
-        # x, y, w, h = cv2.boundingRect(contour)
-        # cv2.rectangle(color_img, (x, y), (x + w, y + h), (0, 0, 255), 3)
-
-    if not no_parent_contours:
-        print("No Parentless Contours, falling back to all contours")
-        no_parent_contours = contours
-
-    largest_contours = sorted(no_parent_contours, key=lambda c: cv2.contourArea(c), reverse=True)
-    largest_contours = largest_contours[:1]
-    largest_contour = largest_contours[0]
-
-    if is_drawing:
-        cv2.drawContours(color_img, [largest_contour], -1, (0, 255, 0), 3)
-    # cv2.imshow("Location Testing", color_img)
-
-    return largest_contour
+    # compute the descriptors with BRIEF
+    # kp, des = brief.compute(img, kp)
 
 
 # region Feature Globals
@@ -188,7 +220,7 @@ def refined_points(frame, color_img, gray_img, points):
 
 def qr(frame, color_img, gray_img):
     corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
-    cv2.drawKeypoints(color_img, corners, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # cv2.drawKeypoints(color_img, corners, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     points = [p[0] for p in corners]
     grid_size = InterestPoint.calculate_grid_size(points)
@@ -202,6 +234,35 @@ def qr(frame, color_img, gray_img):
                       (i_point.x + half_grid, i_point.y + half_grid),
                       (255, 255, 255))  # cv2.rectangle(color_img, (x - 10, y - 10), (x + 10, y + 10), (255, 255, 255))
 
+
+def homography_test(frame, color_img, gray_img):
+    # print(MazeGridCode.get_angle_between_cells(0,14) * 180.0 / math.pi)
+    is_displaying = True
+
+    corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
+
+    # Display GFTTs
+    # if is_displaying:
+    #     kp_corners = [cv2.KeyPoint(c[0][0], c[0][1], 13) for c in corners]
+    #     cv2.drawKeypoints(color_img, kp_corners, color_img, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    # Convert GFTTs to boxes and display
+    points = [p[0] for p in corners]
+    # grid_cell_side_length = InterestPoint.calculate_grid_size(points)
+    # half_grid_cell_side_length = math.ceil(grid_cell_side_length / 2)
+    i_points = []
+    for c in corners:
+        pt = c[0]
+        i_point = InterestPoint(pt)
+        i_points.append(i_point)
+
+    # Find top left feature
+    # top_left = InterestPoint.top_left_point(i_points, grid_cell_side_length)
+    # if is_displaying:
+    #     cv2.rectangle(color_img, (top_left.x - half_grid_cell_side_length, top_left.y - half_grid_cell_side_length),
+    #                   (top_left.x + half_grid_cell_side_length, top_left.y + half_grid_cell_side_length), (0, 255, 0))
+
+    matching_i_points = MazeGridCode.scale_test_find(color_img, gray_img, i_points)
 
 # region Instant Testing
 
@@ -219,27 +280,27 @@ test = cv2.drawKeypoints(adv_left, kp_corners, None, flags=cv2.DRAW_MATCHES_FLAG
 cv2.imshow("Test", test)
 
 # Convert GFTTs to boxes and display
-points = [p[0] for p in corners]
-corners_mask = np.zeros_like(adv_left)
-grid_size = InterestPoint.calculate_grid_size(points)
-half_grid = int(grid_size / 2)
-i_points = []
-for c in corners:
-    pt = c[0]
-    i_point = InterestPoint(pt)
-    i_points.append(i_point)
-    cv2.rectangle(corners_mask, (i_point.x - half_grid, i_point.y - half_grid),
-                  (i_point.x + half_grid, i_point.y + half_grid), (255, 255, 255), -1)
-
-cv2.imshow("Mask", corners_mask)
+# points = [p[0] for p in corners]
+# corners_mask = np.zeros_like(adv_left)
+# grid_size = InterestPoint.calculate_grid_size(points)
+# half_grid = int(grid_size / 2)
+# i_points = []
+# for c in corners:
+#     pt = c[0]
+#     i_point = InterestPoint(pt)
+#     i_points.append(i_point)
+#     cv2.rectangle(corners_mask, (i_point.x - half_grid, i_point.y - half_grid),
+#                   (i_point.x + half_grid, i_point.y + half_grid), (255, 255, 255), -1)
+#
+# cv2.imshow("Mask", corners_mask)
 
 
 # Find mgc adv0
-top_left = InterestPoint.top_left_point(i_points, grid_size)
-# cv2.rectangle(adv_left, (top_left.x - half_grid, top_left.y - half_grid),
-#               (top_left.x + half_grid, top_left.y + half_grid), (255, 255, 255), -1)
-
-matching_i_points = MazeGridCode.test_find(adv_left, top_left, i_points, grid_size)
+# top_left = InterestPoint.top_left_point(i_points, grid_size)
+# # cv2.rectangle(adv_left, (top_left.x - half_grid, top_left.y - half_grid),
+# #               (top_left.x + half_grid, top_left.y + half_grid), (255, 255, 255), -1)
+#
+# matching_i_points = MazeGridCode.test_find(adv_left, top_left, i_points, grid_size)
 
 # # temp_copy = adv_left
 # for i_point in i_points:
@@ -251,7 +312,7 @@ matching_i_points = MazeGridCode.test_find(adv_left, top_left, i_points, grid_si
 #     #     break
 #     if matching_i_points:
 #         break
-cv2.imshow("Find QR", adv_left)
+# cv2.imshow("Find QR", adv_left)
 
 
 # endregion
@@ -262,22 +323,36 @@ cv2.imshow("Find QR", adv_left)
 is_locating = False
 is_featuring = False
 is_qr = False
+is_homography = False
+
+frame_count = 0
 
 while True:
     frame = uvc_capture.get_frame()
+    frame_count += 1
     img = frame.img
     gray_img = frame.gray
+    undistorted_img = camera_model.undistort(img)
+    undistorted_gray_img = camera_model.undistort(gray_img)
 
-    if is_locating:
-        locating(frame, img, gray_img, True)
+    # if is_locating and frame_count >= 10:
+    #     frame_count = 0
+    #     locating(frame, img, gray_img, True)
+    locating(frame, img, gray_img, True)
 
-    if is_qr:
+    if is_qr and frame_count >= 10:
+        frame_count = 0
         qr(frame, img, gray_img)
 
-    if is_featuring:
+    if is_featuring and frame_count >= 10:
+        frame_count = 0
         featuring(frame, img, gray_img)
 
-    cv2.imshow("Testing", img)
+    if is_homography and frame_count >= 10:
+        frame_count = 0
+        homography_test(frame, undistorted_img, undistorted_gray_img)
+
+    cv2.imshow("Testing", undistorted_img)
 
     key = cv2.waitKey(1)
     if key == 27:    # esc to quit
@@ -300,6 +375,12 @@ while True:
         is_qr = False
         print("Matching")
         is_qr = True
+    if key == 104:  # h to homography_test
+        is_locating = False
+        is_featuring = False
+        is_qr = False
+        print("Matching")
+        is_homography = True
     if key == 32:       # space to take pic
         cv2.imwrite("C:\work\pictures\captured\maze_color.png", img)
         cv2.imwrite("C:\work\pictures\captured\maze_gray.png", gray_img)
