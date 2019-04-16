@@ -179,12 +179,14 @@ class Hips_Surface_Tracker(Plugin):
                                             self.min_id_confidence, )
                                     self.notify_all({"subject": "surfaces_changed", "delay": 1})
 
+    # TODO: Probably remove this
     def add_surface(self, _):
         surf = Reference_Surface(self.g_pool)
         surf.on_finish_define = self.save_surface_definitions_to_file
         self.surfaces.append(surf)
         self.update_gui_markers()
 
+    # TODO: Probably remove this
     def remove_surface(self, i):
         remove_surface = self.surfaces[i]
         if remove_surface == self.marker_edit_surface:
@@ -196,6 +198,12 @@ class Hips_Surface_Tracker(Plugin):
         del self.surfaces[i]
         self.update_gui_markers()
         self.notify_all({"subject": "surfaces_changed"})
+
+    def show_eyes(self, _):
+        self.notify_all({
+                "subject": "world.force_eyes",
+            }
+        )
 
     def init_ui(self):
         self.add_menu()
@@ -219,6 +227,8 @@ class Hips_Surface_Tracker(Plugin):
                 "This plugin detects and tracks fiducial markers Hidden In Plain Sight in the scene."))
         # self.menu.append(ui.Switch("robust_detection", self, label="Robust detection"))
         # self.menu.append(ui.Switch("locate_3d", self, label="3D localization"))
+
+        self.menu.append(ui.Button("Show Eyes", lambda: self.show_eyes("_")))
 
         self.menu.append(
             ui.Text_Input(
@@ -250,9 +260,11 @@ class Hips_Surface_Tracker(Plugin):
                     "Maze - No Choice (INT)",
                     "Maze - Choice (INT)",
                     "Maze - No Choice (ADV)",
-                    "Maze - Choice (EASY)",
-                    "Symbol-Digit (SYM)",
-                    "Symbol-Digit (DI)",
+                    "Maze - Choice (ADV)",
+                    "Symbol-Digit (SYM) - Trial 1",
+                    "Symbol-Digit (DI) - Trial 1",
+                    "Symbol-Digit (SYM) - Trial 2",
+                    "Symbol-Digit (DI) - Trial 2",
                 ],
                 label="Select Form", ))
         button_text = "End Form" if self.is_solving_maze else "Begin Form"

@@ -107,6 +107,8 @@ class Recorder(System_Plugin_Base):
         check_timer = timer(1.0)
         self.check_space = lambda: next(check_timer)
 
+        self.calibration_session_number = 0;
+
     def get_init_dict(self):
         d = {}
         d["record_eye"] = self.record_eye
@@ -290,13 +292,14 @@ class Recorder(System_Plugin_Base):
             if not self.running:
                 logger.info("Recording not yet started, can't begin calibration.")
             else:
-                self.user_info["Calibration Start"] = self.g_pool.get_timestamp()
+                self.user_info["Calibration Start " + str(self.calibration_session_number)] = self.g_pool.get_timestamp()
 
         elif notification["subject"] == "calibration.stopped":
             if not self.running:
                 logger.info("Recording not yet started, can't end calibration.")
             else:
-                self.user_info["Calibration Stop"] = self.g_pool.get_timestamp()
+                self.user_info["Calibration Stop " + str(self.calibration_session_number)] = self.g_pool.get_timestamp()
+                self.calibration_session_number += 1
 
 
     def get_rec_time_str(self):
@@ -304,6 +307,7 @@ class Recorder(System_Plugin_Base):
         return strftime("%H:%M:%S", rec_time)
 
     def start(self):
+        self.calibration_session_number = 0
         session = os.path.join(self.rec_root_dir, self.session_name)
         try:
             os.makedirs(session, exist_ok=True)

@@ -434,6 +434,12 @@ def world(
                                 "doc": p.on_notify.__doc__,
                             }
                         )
+            elif subject == "world.force_eyes":
+                if not eye_procs_alive[0].value:
+                    start_stop_eye(0, True)
+
+                if not eye_procs_alive[1].value:
+                    start_stop_eye(1, True)
 
         width, height = session_settings.get(
             "window_size", window_size_default
