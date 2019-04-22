@@ -245,19 +245,82 @@ def homography_test(color_img, gray_img):
     corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
 
     # Display GFTTs
-    # if is_displaying:
-    #     kp_corners = [cv2.KeyPoint(c[0][0], c[0][1], 13) for c in corners]
-    #     cv2.drawKeypoints(color_img, kp_corners, color_img, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    if is_displaying:
+        # Set the needed parameters to find the refined corners
+        winSize = (5, 5)
+        zeroZone = (-1, -1)
+        criteria = (cv2.TERM_CRITERIA_EPS + cv2.TermCriteria_COUNT, 40, 0.001)
+        # Calculate the refined corner locations
+        corners = cv2.cornerSubPix(gray_img, corners, winSize, zeroZone, criteria)
+
+        kp_corners = [cv2.KeyPoint(c[0][0], c[0][1], 13) for c in corners]
+        cv2.drawKeypoints(color_img, kp_corners, color_img, (0,255,0))
 
     # Convert GFTTs to boxes and display
     points = [p[0] for p in corners]
     # grid_cell_side_length = InterestPoint.calculate_grid_size(points)
     # half_grid_cell_side_length = math.ceil(grid_cell_side_length / 2)
     i_points = []
+    first_corner = None
     for c in corners:
         pt = c[0]
+
         i_point = InterestPoint(pt)
         i_points.append(i_point)
+
+        if first_corner is None:
+            first_corner = i_point
+
+    if first_corner is None:
+        return
+
+    size = 18
+    NORMAL_WINDOW = (size, size)
+    RESIZED_WINDOW = (600, 600)
+
+    x1 = first_corner.x - size
+    x2 = first_corner.x + size
+    y1 = first_corner.y - size
+    y2 = first_corner.y + size
+
+    if x1 < 0 or y1 < 0:
+        return
+
+    roi = gray_img[y1:y2, x1:x2]
+    # integral1_img, integral2_img, integral3_img = cv2.integral3(roi)
+    _, thresh_img = cv2.threshold(roi, 100, 255, cv2.THRESH_BINARY)
+    image_height, image_width = thresh_img.shape
+    cv2.rectangle(thresh_img, (0,0), (image_width, image_height), (0,0,0), 1, cv2.LINE_8)
+    _img2, contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    # hierarchy = hierarchy[0]
+    #
+    # if not contours:
+    #     print("No Contours")
+    #     return
+    #
+    # no_parent_contours = []
+    # for i in range(len(contours) - 1, -1, -1):
+    #     if hierarchy[i][2] == -1:
+    #         continue
+    #
+    #     contour = contours[i]
+    #     no_parent_contours.append(contour)
+    #
+    #     x, y, w, h = cv2.boundingRect(contour)
+    #     cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 0, 255), 3)
+
+    for c in contours:
+        M = cv2.moments(c)
+        x = int(M["m10"] / M["m00"])
+        y = int(M["m01"] / M["m00"])
+        cv2.circle(thresh_img, (x, y), 7, (0, 0, 0), -1)
+
+    cv2.namedWindow("zoom", cv2.WINDOW_NORMAL)
+    cv2.imshow("zoom", thresh_img)
+
+
+    cv2.resizeWindow("zoom", 600, 600)
+
 
     # Find top left feature
     # top_left = InterestPoint.top_left_point(i_points, grid_cell_side_length)
@@ -265,7 +328,186 @@ def homography_test(color_img, gray_img):
     #     cv2.rectangle(color_img, (top_left.x - half_grid_cell_side_length, top_left.y - half_grid_cell_side_length),
     #                   (top_left.x + half_grid_cell_side_length, top_left.y + half_grid_cell_side_length), (0, 255, 0))
 
-    matching_i_points = MazeGridCode.scale_test_find(color_img, gray_img, i_points)
+    # matching_i_points = MazeGridCode.scale_test_find(color_img, gray_img, i_points)
+
+def compute_gftt_descriptors(gray_img, corner):
+    descriptors = []
+    # Descriptor 0: connection_count
+    # Number of lines connected to the corner
+    # Values: 1, 2, 3, 4 (zero value means the corner was too close to the edge of the image)
+    connection_count = 0
+    size = 18
+
+    x1 = corner.x - size
+    x2 = corner.x + size
+    y1 = corner.y - size
+    y2 = corner.y + size
+
+    if not (x1 < 0 or y1 < 0):
+        roi = gray_img[y1:y2, x1:x2]
+        _, thresh_img = cv2.threshold(roi, 100, 255, cv2.THRESH_BINARY)
+        image_height, image_width = thresh_img.shape
+        cv2.rectangle(thresh_img, (0, 0), (image_width, image_height), (0, 0, 0), 1, cv2.LINE_8)
+        _img2, contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+        connection_count = len(contours)
+    descriptors.append(connection_count)
+
+    # Descriptor 1: angle
+
+
+orb = cv2.ORB_create()
+fast = cv2.FastFeatureDetector_create()
+brisk = cv2.BRISK_create()
+gfft = cv2.GFTTDetector_create()
+kaze = cv2.KAZE_create()
+def create_surface(color_img, gray_img):
+    kps = brisk.detect(gray_img, None)
+
+    copy_img = color_img.copy()
+    cv2.drawKeypoints(copy_img, kps, copy_img, (255,0,0))
+    cv2.imshow("SurfaceDef", copy_img)
+    cv2.setMouseCallback("SurfaceDef", define_quadrant, (color_img, gray_img, kps))
+
+rx1 = 0
+rx2 = 0
+ry1 = 0
+ry2 = 0
+is_roi_ready = False
+down_params = None
+def define_quadrant(event, x, y, flags, params):
+    global rx1, rx2, ry1, ry2
+    global is_roi_ready
+    global down_params
+
+    if event == cv2.EVENT_LBUTTONDOWN:
+        rx1 = x
+        ry1 = y
+        down_params = params
+        print("down")
+    if event == cv2.EVENT_LBUTTONUP:
+        rx2 = x
+        ry2 = y
+
+        color_img, gray_img, key_points = down_params
+
+        kp, desc = create_marker((rx1, ry1, rx2, ry2), color_img, gray_img, key_points)
+
+        copy_img = color_img.copy()
+        cv2.rectangle(copy_img, (rx1, ry1), (rx2, ry2), (0, 0, 255))
+        cv2.drawKeypoints(copy_img, kp, copy_img, (255, 0, 0), 4)
+        cv2.imshow("SurfaceDef", copy_img)
+        is_roi_ready = True
+
+# def create_surface(frames):
+#     def create_marker():
+#         pass
+
+mgc = None
+def create_marker(roi, color_img, gray_img, key_points):
+    def find_closest(corner, key_points):
+        x1, y1 = corner
+        closest_distance = float('inf')
+        closest_key_point = None
+        for kp in key_points:
+            x2, y2 = kp.pt
+            manhattan_distance = abs(x2 - x1) + abs(y2 - y1)
+            # if manhattan_distance >= 20:
+            #     continue
+            if closest_key_point is None or manhattan_distance < closest_distance:
+                closest_key_point = kp
+                closest_distance = manhattan_distance
+        return closest_key_point
+
+    global mgc
+    kp = []
+    for pt in key_points:
+        x, y = pt.pt
+        if MazeGridCode.is_point_in_rect(x, y, roi):
+            kp.append(pt)
+
+    corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
+    kps = set()
+    for corner in corners:
+        pt = corner[0]
+        x1, y1 = pt
+        for k in kp:
+            x2, y2 = k.pt
+            manhattan_distance = abs(x2 - x1) + abs(y2 - y1)
+            if manhattan_distance <= 20:
+                kps.add(k)
+
+        # closest_kp = find_closest(pt, kp)
+        # kps.append(closest_kp)
+
+    print(str(len(corners)))
+    print(str(len(kp)))
+    print(str(len(kps)))
+
+
+    # Add keypoints at corners to gray_img so that boundary keypoints aren't removed
+    left_kp = cv2.KeyPoint()
+    left_kp.pt = (0,0)
+    kps.add(left_kp)
+
+    left_kp = cv2.KeyPoint()
+    left_kp.pt = (0, gray_img.size)
+    kps.add(left_kp)
+
+    right_kp = cv2.KeyPoint()
+    right_kp.pt = (gray_img.size, gray_img.size)
+    kps.add(right_kp)
+
+    right_kp = cv2.KeyPoint()
+    right_kp.pt = (gray_img.size, 0)
+    kps.add(right_kp)
+
+    print(str(len(kps)))
+
+    kps_out, desc = brisk.compute(gray_img, list(kps))
+    # if desc is None:
+    #     desc = []
+
+    mgc = MGC(kps_out, desc)
+
+    print(str(len(kps_out)))
+    print(str(len(desc)))
+
+    return list(kps), desc
+
+
+class MGC:
+    def __init__(self, key_points, descriptors):
+        self.key_points = key_points
+        self.descriptors = descriptors
+        self.brute_force_matcher = cv2.BFMatcher(cv2.NORM_L2SQR)
+
+    def find_match_flann(self, kp, desc):
+        if self.descriptors is None or desc is None:
+            return []
+
+        index_params = dict(algorithm=6, table_number=6, key_size=12, multi_probe_level=1)
+        search_params = dict()
+        flann = cv2.FlannBasedMatcher(index_params, search_params)
+        matches = flann.knnMatch(self.descriptors, desc, k=2)
+        good_points = []
+        try:
+            for m, n in [x for x in matches if len(x) >= 2]:
+                # print("m.dist=" + str(m.distance) + ", n.distance=" + str(n.distance))
+                if m.distance < 0.8 * n.distance:
+                    good_points.append(m)
+        except:
+            pass
+        finally:
+            return good_points
+
+    def find_match_brute(self, kp, desc):
+        if self.descriptors is None or desc is None:
+            return []
+
+
+        # matches = self.brute_force_matcher.knnMatch(self.descriptors, desc, k=2)
+        return self.brute_force_matcher.match(self.descriptors, desc)
+
 
 # region Instant Testing
 
@@ -326,7 +568,7 @@ cv2.imshow("Test", test)
 is_locating = False
 is_featuring = False
 is_qr = False
-is_homography = False
+is_homography = True
 
 frame_count = 0
 
@@ -338,24 +580,42 @@ while True:
     else:
         frame = uvc_capture.get_frame()
     frame_count += 1
+    color_img = frame if uvc_capture is None else frame.img
+    gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if uvc_capture is None else frame.gray
+    undistorted_img = color_img if uvc_capture is None else camera_model.undistort(color_img)
+    undistorted_gray_img = gray_img if uvc_capture is None else camera_model.undistort(gray_img)
+    if is_threshing:
+        undistorted_gray_img = image_histogram_based_thresholding(undistorted_gray_img)
+
 
     # if is_locating and frame_count >= 10:
     #     frame_count = 0
     #     locating(frame, img, gray_img, True)
-    locating(frame, img, gray_img, True)
+    # create_surface(undistorted_img, undistorted_gray_img)
+
+    if mgc is not None:
+        kp = brisk.detect(undistorted_gray_img, None)
+        # cv2.drawKeypoints(color_img, kp, color_img, (255, 0, 0))
+        kp, desc = brisk.compute(undistorted_gray_img, kp)
+        matches = mgc.find_match_brute(kp, desc)
+        matching_kp = [kp[m.trainIdx] for m in matches]
+        # print("matches=" + str(len(matches)))
+
+        cv2.drawKeypoints(undistorted_img, matching_kp, undistorted_img, (0, 0, 255), 4)
 
     if is_qr and frame_count >= 10:
         frame_count = 0
-        qr(frame, img, gray_img)
+        qr(frame, undistorted_img, undistorted_gray_img)
 
     if is_featuring and frame_count >= 10:
         frame_count = 0
-        featuring(frame, img, gray_img)
+        featuring(undistorted_img, undistorted_gray_img)
 
     if is_homography and frame_count >= 10:
-        frame_count = 0
-        homography_test(frame, undistorted_img, undistorted_gray_img)
+        frame_count = 10
+        homography_test(undistorted_img, undistorted_gray_img)
 
+    integral1_img, integral2_img, integral3_img = cv2.integral3(undistorted_img)
     cv2.imshow("Testing", undistorted_img)
 
     key = cv2.waitKey(1)
@@ -386,9 +646,11 @@ while True:
         print("Matching")
         is_homography = True
     if key == 32:       # space to take pic
-        cv2.imwrite("C:\work\pictures\captured\maze_color.png", img)
-        cv2.imwrite("C:\work\pictures\captured\maze_gray.png", gray_img)
-        cv2.imwrite("C:\work\pictures\captured\maze_thresh.png", image_histogram_based_thresholding(gray_img))
+        # create_surface(color_img, gray_img)
+        create_surface(undistorted_img, undistorted_gray_img)
+        # cv2.imwrite("C:\work\pictures\captured\maze_color.png", img)
+        # cv2.imwrite("C:\work\pictures\captured\maze_gray.png", gray_img)
+        # cv2.imwrite("C:\work\pictures\captured\maze_thresh.png", image_histogram_based_thresholding(gray_img))
 
 # endregion
 

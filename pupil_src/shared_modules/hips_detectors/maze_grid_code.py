@@ -45,7 +45,7 @@ class MazeGridCode:
                 cell_id += 1
                 continue
             x_offset, y_offset = self.get_cell_offsets(cell_id, 100)
-            destination_points.append((x_offset, y_offset))
+            destination_points.append((x_offset + 100, y_offset + 100))     # +100 to each side to have wider border on search homography
             cell_id += 1
         self.homography_destination_points = np.array(destination_points)
 
@@ -222,8 +222,8 @@ class MazeGridCode:
                         is_match_found = True
                         break
 
-        # if is_match_found:
-        #     homography_source_points = np.array([(i_pt.x, i_pt.y) for i_pt in matches])
-        #     H, status = cv2.findHomography(homography_source_points, mgc_adv0.homography_destination_points)
-        #     img_out = cv2.warpPerspective(color_img, H, (300, 300))
-        #     cv2.imshow("Homography", img_out)
+        if is_match_found:
+            homography_source_points = np.array([(i_pt.x, i_pt.y) for i_pt in matches])
+            H, status = cv2.findHomography(homography_source_points, mgc_adv0.homography_destination_points)
+            img_out = cv2.warpPerspective(color_img, H, (500, 500))
+            cv2.imshow("Homography", img_out)
