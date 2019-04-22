@@ -11,6 +11,7 @@ from camera_models import Radial_Dist_Camera
 
 # region Pupil World Camera Initialization
 
+uvc_capture = None
 devices = uvc.Device_List()
 devices_by_name = {dev["name"]: dev for dev in devices}
 
@@ -31,10 +32,12 @@ for name in preferred_names:
             else:
                 break
 
-uvc_capture.frame_size = (1280, 720)
-uvc_capture.frame_rate = 60
-cap = uvc_capture
-# cv2.VideoCapture(0)   # Capture from webcam instead.
+cap = None
+if uvc_capture is None:
+    cap = cv2.VideoCapture(0)   # Capture from webcam instead.
+else:
+    uvc_capture.frame_size = (1280, 720)
+    uvc_capture.frame_rate = 60
 
 # endregion
 
@@ -63,7 +66,7 @@ def image_histogram_based_thresholding(img):
     return otsu_threshold_img
 
 
-def locating(frame, color_img, gray_img, is_drawing=False):
+def locating(color_img, gray_img, is_drawing=False):
     # threshold_image = image_histogram_based_thresholding(gray_img)
     #
     # # So we can find rectangles that go to the edge, we draw a white line around the image edge.
@@ -151,7 +154,7 @@ lk_params = dict(winSize=(15, 15), maxLevel=2, criteria=(cv2.TERM_CRITERIA_EPS |
 # endregion
 
 
-def featuring(frame, color_img, gray_img):
+def featuring(color_img, gray_img):
     global prev_gray_img
     global prev_points
     global curr_points
@@ -202,8 +205,8 @@ def featuring(frame, color_img, gray_img):
     cv2.imshow("Feature Movement", color_img)
 
 
-def refined_points(frame, color_img, gray_img, points):
-    largest_contour = locating(frame, color_img, gray_img)
+def refined_points(color_img, gray_img, points):
+    largest_contour = locating(color_img, gray_img)
     x, y, w, h = cv2.boundingRect(largest_contour)
     # cv2.rectangle(color_img, (x, y), (x + w, y + h), (0, 0, 255), 3)
     rps = []
@@ -218,7 +221,7 @@ def refined_points(frame, color_img, gray_img, points):
     return rps
 
 
-def qr(frame, color_img, gray_img):
+def qr(color_img, gray_img):
     corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
     # cv2.drawKeypoints(color_img, corners, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
@@ -235,7 +238,7 @@ def qr(frame, color_img, gray_img):
                       (255, 255, 255))  # cv2.rectangle(color_img, (x - 10, y - 10), (x + 10, y + 10), (255, 255, 255))
 
 
-def homography_test(frame, color_img, gray_img):
+def homography_test(color_img, gray_img):
     # print(MazeGridCode.get_angle_between_cells(0,14) * 180.0 / math.pi)
     is_displaying = True
 
@@ -328,12 +331,13 @@ is_homography = False
 frame_count = 0
 
 while True:
-    frame = uvc_capture.get_frame()
+    is_threshing = False
+
+    if uvc_capture is None:
+        _, frame = cap.read()
+    else:
+        frame = uvc_capture.get_frame()
     frame_count += 1
-    img = frame.img
-    gray_img = frame.gray
-    undistorted_img = camera_model.undistort(img)
-    undistorted_gray_img = camera_model.undistort(gray_img)
 
     # if is_locating and frame_count >= 10:
     #     frame_count = 0
@@ -392,8 +396,11 @@ while True:
 
 devices.cleanup()
 devices = None
-uvc_capture.close()
-uvc_capture = None
+if uvc_capture is None:
+    uvc_capture.close()
+    uvc_capture = None
+else:
+    cap.release()
 cv2.destroyAllWindows()
 
 # endregion
