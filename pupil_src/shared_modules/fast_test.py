@@ -35,6 +35,10 @@ for name in preferred_names:
 cap = None
 if uvc_capture is None:
     cap = cv2.VideoCapture(0)   # Capture from webcam instead.
+    print("Frame default resolution: (" + str(cap.get(cv2.CAP_PROP_FRAME_WIDTH)) + "; " + str(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)) + ")")
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+
 else:
     uvc_capture.frame_size = (1280, 720)
     uvc_capture.frame_rate = 60
@@ -239,6 +243,63 @@ def qr(color_img, gray_img):
 
 
 def homography_test(color_img, gray_img):
+    def quickDist(i_point):
+        return abs(i_point.x - 640) + abs(i_point.y - 360)
+
+    def setPixel(list, x, y):
+        index = (y * 24) + x
+        list[index] = 1
+
+    def populateCircle(list):
+        setPixel(list, 9, 0)
+        setPixel(list, 10, 0)
+        setPixel(list, 11, 0)
+        setPixel(list, 12, 0)
+        setPixel(list, 13, 0)
+        setPixel(list, 14, 0)
+        setPixel(list, 6, 1)
+        setPixel(list, 7, 1)
+        setPixel(list, 8, 1)
+        setPixel(list, 15, 1)
+        setPixel(list, 16, 1)
+        setPixel(list, 17, 1)
+        setPixel(list, 5, 2)
+        setPixel(list, 18, 2)
+        setPixel(list, 4, 3)
+        setPixel(list, 19, 3)
+        setPixel(list, 3, 4)
+        setPixel(list, 20, 4)
+        setPixel(list, 2, 5)
+        setPixel(list, 21, 5)
+        setPixel(list, 1, 6)
+        setPixel(list, 22, 6)
+        setPixel(list, 1, 7)
+        setPixel(list, 22, 7)
+        setPixel(list, 1, 8)
+        setPixel(list, 22, 8)
+        setPixel(list, 0, 9)
+        setPixel(list, 0, 10)
+        setPixel(list, 0, 11)
+        setPixel(list, 0, 12)
+        setPixel(list, 0, 13)
+        setPixel(list, 0, 14)
+        setPixel(list, 23, 9)
+        setPixel(list, 23, 10)
+        setPixel(list, 23, 11)
+        setPixel(list, 23, 12)
+        setPixel(list, 23, 13)
+        setPixel(list, 23, 14)
+
+        setPixel(list, 1, 15)
+        setPixel(list, 22, 15)
+        setPixel(list, 1, 16)
+        setPixel(list, 22, 16)
+        setPixel(list, 1, 17)
+        setPixel(list, 22, 17)
+
+    circle24 = [0] * 576
+    circle_pixels = [4, 5, 6, 7, 14, 15, 20, 21, 25, 43, 37, 46, 48, 59, 60, 71, 72, 83, 84, 95, 97, 106, 109, 118, 122, 123, 128, 129, 136, 137, 138, 139]
+
     # print(MazeGridCode.get_angle_between_cells(0,14) * 180.0 / math.pi)
     is_displaying = True
 
@@ -256,25 +317,33 @@ def homography_test(color_img, gray_img):
         kp_corners = [cv2.KeyPoint(c[0][0], c[0][1], 13) for c in corners]
         cv2.drawKeypoints(color_img, kp_corners, color_img, (0,255,0))
 
+    # return
     # Convert GFTTs to boxes and display
     points = [p[0] for p in corners]
     # grid_cell_side_length = InterestPoint.calculate_grid_size(points)
     # half_grid_cell_side_length = math.ceil(grid_cell_side_length / 2)
     i_points = []
-    first_corner = None
+    first_corner = None         # Really center_corner
+    smallest_dist = float('inf')
     for c in corners:
         pt = c[0]
 
         i_point = InterestPoint(pt)
         i_points.append(i_point)
 
+        dist = quickDist(i_point)
+
         if first_corner is None:
             first_corner = i_point
+        elif dist < smallest_dist:
+            first_corner = i_point
+            smallest_dist = dist
+
 
     if first_corner is None:
         return
 
-    size = 18
+    size = 12
     NORMAL_WINDOW = (size, size)
     RESIZED_WINDOW = (600, 600)
 
@@ -288,10 +357,11 @@ def homography_test(color_img, gray_img):
 
     roi = gray_img[y1:y2, x1:x2]
     # integral1_img, integral2_img, integral3_img = cv2.integral3(roi)
-    _, thresh_img = cv2.threshold(roi, 100, 255, cv2.THRESH_BINARY)
+    _, thresh_img = cv2.threshold(roi, 150, 255, cv2.THRESH_BINARY)
+
     image_height, image_width = thresh_img.shape
-    cv2.rectangle(thresh_img, (0,0), (image_width, image_height), (0,0,0), 1, cv2.LINE_8)
-    _img2, contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+    # cv2.rectangle(thresh_img, (0,0), (image_width, image_height), (0,0,0), 1, cv2.LINE_8) # Only need border rectangle to look for contours
+    # _img2, contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
     # hierarchy = hierarchy[0]
     #
     # if not contours:
@@ -309,16 +379,23 @@ def homography_test(color_img, gray_img):
     #     x, y, w, h = cv2.boundingRect(contour)
     #     cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
-    for c in contours:
-        M = cv2.moments(c)
-        x = int(M["m10"] / M["m00"])
-        y = int(M["m01"] / M["m00"])
-        cv2.circle(thresh_img, (x, y), 7, (0, 0, 0), -1)
+    # for c in contours:
+    #     M = cv2.moments(c)
+    #     x = int(M["m10"] / M["m00"])
+    #     y = int(M["m01"] / M["m00"])
+    #     cv2.circle(thresh_img, (x, y), 7, (0, 0, 0), -1)
+
+    for pixel in circle_pixels:
+        y, x = divmod(pixel, 12)
+        thresh_img[x, y] = 0
+
+
+    cv2.namedWindow("blah", cv2.WINDOW_NORMAL)
+    cv2.imshow("blah", roi)
+    cv2.resizeWindow("blah", 600, 600)
 
     cv2.namedWindow("zoom", cv2.WINDOW_NORMAL)
     cv2.imshow("zoom", thresh_img)
-
-
     cv2.resizeWindow("zoom", 600, 600)
 
 
@@ -338,10 +415,10 @@ def compute_gftt_descriptors(gray_img, corner):
     connection_count = 0
     size = 18
 
-    x1 = corner.x - size
-    x2 = corner.x + size
-    y1 = corner.y - size
-    y2 = corner.y + size
+    x1 = int(corner[0] - size)
+    x2 = int(corner[0] + size)
+    y1 = int(corner[1] - size)
+    y2 = int(corner[1] + size)
 
     if not (x1 < 0 or y1 < 0):
         roi = gray_img[y1:y2, x1:x2]
@@ -354,14 +431,20 @@ def compute_gftt_descriptors(gray_img, corner):
 
     # Descriptor 1: angle
 
+    return descriptors
 
-orb = cv2.ORB_create()
+
+orb = cv2.ORB_create(scaleFactor=1.1, nlevels=4, edgeThreshold=0, patchSize=300)
 fast = cv2.FastFeatureDetector_create()
-brisk = cv2.BRISK_create()
+brisk = cv2.BRISK_create(patternScale=5.0)
 gfft = cv2.GFTTDetector_create()
 kaze = cv2.KAZE_create()
+
 def create_surface(color_img, gray_img):
-    kps = brisk.detect(gray_img, None)
+    corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
+    kps = [cv2.KeyPoint(pt[0][0], pt[0][1], compute_gftt_descriptors(gray_img, pt[0])[0] * 10) for pt in corners]
+
+    # kps = gfft.detect(gray_img, None)
 
     copy_img = color_img.copy()
     cv2.drawKeypoints(copy_img, kps, copy_img, (255,0,0))
@@ -424,46 +507,46 @@ def create_marker(roi, color_img, gray_img, key_points):
         x, y = pt.pt
         if MazeGridCode.is_point_in_rect(x, y, roi):
             kp.append(pt)
-
-    corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
-    kps = set()
-    for corner in corners:
-        pt = corner[0]
-        x1, y1 = pt
-        for k in kp:
-            x2, y2 = k.pt
-            manhattan_distance = abs(x2 - x1) + abs(y2 - y1)
-            if manhattan_distance <= 20:
-                kps.add(k)
+    #
+    # corners = cv2.goodFeaturesToTrack(gray_img, **gftt_params)
+    # kps = set()
+    # for corner in corners:
+    #     pt = corner[0]
+    #     x1, y1 = pt
+    #     for k in kp:
+    #         x2, y2 = k.pt
+    #         manhattan_distance = abs(x2 - x1) + abs(y2 - y1)
+    #         if manhattan_distance <= 20:
+    #             kps.add(k)
 
         # closest_kp = find_closest(pt, kp)
         # kps.append(closest_kp)
-
-    print(str(len(corners)))
-    print(str(len(kp)))
-    print(str(len(kps)))
+    kps = set(kp)
+    # print(str(len(corners)))
+    # print(str(len(kp)))
+    # print(str(len(kps)))
 
 
     # Add keypoints at corners to gray_img so that boundary keypoints aren't removed
-    left_kp = cv2.KeyPoint()
-    left_kp.pt = (0,0)
-    kps.add(left_kp)
-
-    left_kp = cv2.KeyPoint()
-    left_kp.pt = (0, gray_img.size)
-    kps.add(left_kp)
-
-    right_kp = cv2.KeyPoint()
-    right_kp.pt = (gray_img.size, gray_img.size)
-    kps.add(right_kp)
-
-    right_kp = cv2.KeyPoint()
-    right_kp.pt = (gray_img.size, 0)
-    kps.add(right_kp)
+    # left_kp = cv2.KeyPoint()
+    # left_kp.pt = (0,0)
+    # kps.add(left_kp)
+    #
+    # left_kp = cv2.KeyPoint()
+    # left_kp.pt = (0, gray_img.size)
+    # kps.add(left_kp)
+    #
+    # right_kp = cv2.KeyPoint()
+    # right_kp.pt = (gray_img.size, gray_img.size)
+    # kps.add(right_kp)
+    #
+    # right_kp = cv2.KeyPoint()
+    # right_kp.pt = (gray_img.size, 0)
+    # kps.add(right_kp)
 
     print(str(len(kps)))
 
-    kps_out, desc = brisk.compute(gray_img, list(kps))
+    kps_out, desc = orb.compute(gray_img, list(kps))
     # if desc is None:
     #     desc = []
 
@@ -479,7 +562,7 @@ class MGC:
     def __init__(self, key_points, descriptors):
         self.key_points = key_points
         self.descriptors = descriptors
-        self.brute_force_matcher = cv2.BFMatcher(cv2.NORM_L2SQR)
+        self.brute_force_matcher = cv2.BFMatcher(cv2.NORM_HAMMING)  # NORM_HAMMING, NORM_L2SQR
 
     def find_match_flann(self, kp, desc):
         if self.descriptors is None or desc is None:
@@ -520,9 +603,9 @@ adv_left = cv2.imread("C:\work\pictures\ADV\ADV.png", 0)
 corners = cv2.goodFeaturesToTrack(adv_left, **gftt_params)
 
 # Display GFTTs
-kp_corners = [cv2.KeyPoint(c[0][0], c[0][1], 13) for c in corners]
-test = cv2.drawKeypoints(adv_left, kp_corners, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-cv2.imshow("Test", test)
+# kp_corners = [cv2.KeyPoint(c[0][0], c[0][1], 13) for c in corners]
+# test = cv2.drawKeypoints(adv_left, kp_corners, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+# cv2.imshow("Test", test)
 
 # Convert GFTTs to boxes and display
 # points = [p[0] for p in corners]
@@ -568,7 +651,7 @@ cv2.imshow("Test", test)
 is_locating = False
 is_featuring = False
 is_qr = False
-is_homography = True
+is_homography = False
 
 frame_count = 0
 
@@ -581,7 +664,7 @@ while True:
         frame = uvc_capture.get_frame()
     frame_count += 1
     color_img = frame if uvc_capture is None else frame.img
-    gray_img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) if uvc_capture is None else frame.gray
+    gray_img = cv2.cvtColor(color_img, cv2.COLOR_BGR2GRAY) if uvc_capture is None else frame.gray
     undistorted_img = color_img if uvc_capture is None else camera_model.undistort(color_img)
     undistorted_gray_img = gray_img if uvc_capture is None else camera_model.undistort(gray_img)
     if is_threshing:
@@ -594,9 +677,12 @@ while True:
     # create_surface(undistorted_img, undistorted_gray_img)
 
     if mgc is not None:
-        kp = brisk.detect(undistorted_gray_img, None)
+        # kp = gfft.detect(undistorted_gray_img, None)
+        corners = cv2.goodFeaturesToTrack(undistorted_gray_img, **gftt_params)
+        kp = [cv2.KeyPoint(pt[0][0], pt[0][1], compute_gftt_descriptors(undistorted_gray_img, pt[0])[0] * 10) for pt in corners]
+        # cv2.drawKeypoints(undistorted_img, kp, undistorted_img, (0, 0, 255), 4)
         # cv2.drawKeypoints(color_img, kp, color_img, (255, 0, 0))
-        kp, desc = brisk.compute(undistorted_gray_img, kp)
+        kp, desc = orb.compute(undistorted_gray_img, kp)
         matches = mgc.find_match_brute(kp, desc)
         matching_kp = [kp[m.trainIdx] for m in matches]
         # print("matches=" + str(len(matches)))
@@ -615,7 +701,7 @@ while True:
         frame_count = 10
         homography_test(undistorted_img, undistorted_gray_img)
 
-    integral1_img, integral2_img, integral3_img = cv2.integral3(undistorted_img)
+    # integral1_img, integral2_img, integral3_img = cv2.integral3(undistorted_img)
     cv2.imshow("Testing", undistorted_img)
 
     key = cv2.waitKey(1)
