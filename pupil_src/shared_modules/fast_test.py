@@ -5,6 +5,7 @@ import math
 
 from hips_detectors.interest_point import InterestPoint
 from hips_detectors.maze_grid_code import MazeGridCode
+from hips_detectors.utilities import (degree_arc_of_raster_circle, create_circle)
 
 from camera_models import Radial_Dist_Camera
 
@@ -360,34 +361,44 @@ def homography_test(color_img, gray_img):
     _, thresh_img = cv2.threshold(roi, 150, 255, cv2.THRESH_BINARY)
 
     image_height, image_width = thresh_img.shape
-    # cv2.rectangle(thresh_img, (0,0), (image_width, image_height), (0,0,0), 1, cv2.LINE_8) # Only need border rectangle to look for contours
-    # _img2, contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
-    # hierarchy = hierarchy[0]
-    #
-    # if not contours:
-    #     print("No Contours")
-    #     return
-    #
-    # no_parent_contours = []
-    # for i in range(len(contours) - 1, -1, -1):
-    #     if hierarchy[i][2] == -1:
-    #         continue
-    #
-    #     contour = contours[i]
-    #     no_parent_contours.append(contour)
-    #
-    #     x, y, w, h = cv2.boundingRect(contour)
-    #     cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 0, 255), 3)
 
-    # for c in contours:
-    #     M = cv2.moments(c)
-    #     x = int(M["m10"] / M["m00"])
-    #     y = int(M["m01"] / M["m00"])
-    #     cv2.circle(thresh_img, (x, y), 7, (0, 0, 0), -1)
+    array = create_circle(11)
+    # for pixel in array:
+    #     y, x = divmod(pixel, 24)
+    #     thresh_img[x, y] = 0
 
-    for pixel in circle_pixels:
-        y, x = divmod(pixel, 12)
-        thresh_img[x, y] = 0
+    degree_arc = degree_arc_of_raster_circle(array)
+    angle = 0
+
+    for i in range(1, len(array)):
+        test_point = array[i]
+        y, x = divmod(test_point, 24)
+        pixel = thresh_img[x, y]
+
+        previous_test_point = array[i - 1]
+        y, x = divmod(previous_test_point, 24)
+        previous_pixel = thresh_img[x, y]
+
+        if previous_pixel == 0 and pixel == 255:
+            angle = degree_arc * (i - 1)
+            break
+
+    print("full angle: " + str(angle))
+
+    angle -= 45
+
+    if angle <= 0:
+        angle += 45
+    elif angle > 270:
+        angle -= 270
+    elif angle > 0 and angle <= 90:
+        angle = angle
+    elif angle > 90 and angle <= 180:
+        angle -= 90
+    elif angle > 180 and angle <= 270:
+        angle -= 180
+
+    print("adjusted angle: " + str(angle))
 
 
     cv2.namedWindow("blah", cv2.WINDOW_NORMAL)
@@ -407,7 +418,10 @@ def homography_test(color_img, gray_img):
 
     # matching_i_points = MazeGridCode.scale_test_find(color_img, gray_img, i_points)
 
+
+reference_angle_array = create_circle(11)
 def compute_gftt_descriptors(gray_img, corner):
+    gray_image_height, gray_image_width = gray_img.shape
     descriptors = []
     # Descriptor 0: connection_count
     # Number of lines connected to the corner
@@ -430,6 +444,49 @@ def compute_gftt_descriptors(gray_img, corner):
     descriptors.append(connection_count)
 
     # Descriptor 1: angle
+    # Normalized angle of rotation for the first connection found
+    # Values: Ranges from 0 tp 90, where 45 is no rotation.
+
+    degree_arc = degree_arc_of_raster_circle(reference_angle_array)
+    angle = 0
+    size = 12
+
+    x1 = int(corner[0] - size)
+    x2 = int(corner[0] + size)
+    y1 = int(corner[1] - size)
+    y2 = int(corner[1] + size)
+
+    if not (x1 < 0 or y1 < 0) and not (x2 > gray_image_width or y2 > gray_image_height):
+        roi = gray_img[y1:y2, x1:x2]
+        _, thresh_img = cv2.threshold(roi, 150, 255, cv2.THRESH_BINARY)
+
+        for i in range(1, len(reference_angle_array)):
+            test_point = reference_angle_array[i]
+            y, x = divmod(test_point, 24)
+            pixel = thresh_img[x, y]
+
+            previous_test_point = reference_angle_array[i - 1]
+            y, x = divmod(previous_test_point, 24)
+            previous_pixel = thresh_img[x, y]
+
+            if previous_pixel == 0 and pixel == 255:
+                angle = degree_arc * (i - 1)
+                break
+
+        angle -= 45
+
+        if angle <= 0:
+            angle += 45
+        elif angle > 270:
+            angle -= 270
+        elif 0 < angle <= 90:
+            angle = angle
+        elif 90 < angle <= 180:
+            angle -= 90
+        elif 180 < angle <= 270:
+            angle -= 180
+
+    descriptors.append(angle)
 
     return descriptors
 
@@ -546,7 +603,13 @@ def create_marker(roi, color_img, gray_img, key_points):
 
     print(str(len(kps)))
 
-    kps_out, desc = orb.compute(gray_img, list(kps))
+
+    kps_out = list(kps)
+    desc = []
+    for kp in kps_out:
+        d = compute_gftt_descriptors(gray_img, kp.pt)
+        desc.append(d)
+    # kps_out, desc = orb.compute(gray_img, list(kps))
     # if desc is None:
     #     desc = []
 
@@ -561,13 +624,14 @@ def create_marker(roi, color_img, gray_img, key_points):
 class MGC:
     def __init__(self, key_points, descriptors):
         self.key_points = key_points
-        self.descriptors = descriptors
-        self.brute_force_matcher = cv2.BFMatcher(cv2.NORM_HAMMING)  # NORM_HAMMING, NORM_L2SQR
+        self.descriptors = np.array(descriptors)
+        self.brute_force_matcher = cv2.BFMatcher(cv2.NORM_L2SQR)  # NORM_HAMMING, NORM_L2SQR
 
     def find_match_flann(self, kp, desc):
         if self.descriptors is None or desc is None:
             return []
 
+            desc = np.array(desc)
         index_params = dict(algorithm=6, table_number=6, key_size=12, multi_probe_level=1)
         search_params = dict()
         flann = cv2.FlannBasedMatcher(index_params, search_params)
@@ -587,6 +651,7 @@ class MGC:
         if self.descriptors is None or desc is None:
             return []
 
+        desc = np.array(desc)
 
         # matches = self.brute_force_matcher.knnMatch(self.descriptors, desc, k=2)
         return self.brute_force_matcher.match(self.descriptors, desc)
@@ -682,7 +747,13 @@ while True:
         kp = [cv2.KeyPoint(pt[0][0], pt[0][1], compute_gftt_descriptors(undistorted_gray_img, pt[0])[0] * 10) for pt in corners]
         # cv2.drawKeypoints(undistorted_img, kp, undistorted_img, (0, 0, 255), 4)
         # cv2.drawKeypoints(color_img, kp, color_img, (255, 0, 0))
-        kp, desc = orb.compute(undistorted_gray_img, kp)
+        # kp, desc = orb.compute(undistorted_gray_img, kp)
+
+        desc = []
+        for keypoint in kp:
+            d = compute_gftt_descriptors(gray_img, keypoint.pt)
+            desc.append(d)
+
         matches = mgc.find_match_brute(kp, desc)
         matching_kp = [kp[m.trainIdx] for m in matches]
         # print("matches=" + str(len(matches)))
