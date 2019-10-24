@@ -192,21 +192,21 @@ class Surface_Tracker(Plugin):
         self.button = ui.Thumb("running", self, label="S", hotkey="s")
         self.button.on_color[:] = (0.1, 0.2, 1.0, 0.8)
         self.g_pool.quickbar.append(self.button)
-        # self.add_button = ui.Thumb(
-        #     "add_surface",
-        #     setter=self.add_surface,
-        #     getter=lambda: False,
-        #     label="A",
-        #     hotkey="a",
-        # )
-        # self.g_pool.quickbar.append(self.add_button)
+        self.add_button = ui.Thumb(
+            "add_surface",
+            setter=self.add_surface,
+            getter=lambda: False,
+            label="A",
+            hotkey="a",
+        )
+        self.g_pool.quickbar.append(self.add_button)
         self.update_gui_markers()
 
     def deinit_ui(self):
         self.g_pool.quickbar.remove(self.button)
         self.button = None
-        # self.g_pool.quickbar.remove(self.add_button)
-        # self.add_button = None
+        self.g_pool.quickbar.remove(self.add_button)
+        self.add_button = None
         self.remove_menu()
 
     def update_gui_markers(self):
