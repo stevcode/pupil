@@ -210,15 +210,15 @@ class Hips_Surface_Tracker(Plugin):
         self.add_menu()
         self.menu.label = "HIPS Surface Tracker"
 
-        self.button = ui.Thumb("running", self, label="S", hotkey="s")
-        self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
-        self.g_pool.quickbar.append(self.button)
+        # self.button = ui.Thumb("running", self, label="S", hotkey="s")
+        # self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
+        # self.g_pool.quickbar.append(self.button)
 
         self.update_gui_markers()
 
     def deinit_ui(self):
-        self.g_pool.quickbar.remove(self.button)
-        self.button = None
+        # self.g_pool.quickbar.remove(self.button)
+        # self.button = None
 
         self.remove_menu()
 
