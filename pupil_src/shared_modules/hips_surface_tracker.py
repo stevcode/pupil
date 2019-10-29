@@ -58,6 +58,7 @@ class Hips_Surface_Tracker(Plugin):
         self.markers = []
 
         self.load_surface_definitions_from_folder()
+        self.surfaces = []
 
         self.current_maze_form = "None"
 
@@ -89,50 +90,50 @@ class Hips_Surface_Tracker(Plugin):
 
     # TODO: Probably remove this, or repurposed to load MazeGridCodes
     def load_surface_definitions_from_folder(self):
-        # all registered surfaces
-        self.surface_definitions = self.import_surfaces(
-            os.path.join(self.g_pool.user_dir, "surfaces")
-        )
-        # self.surfaces = [
-        #     Reference_Surface(self.g_pool, saved_definition=d)
-        #     for d in self.surface_definitions.get("realtime_square_marker_surfaces", [])
-        # ]
-        self.surfaces = []
+        # # all registered surfaces
+        # self.surface_definitions = self.import_surfaces(
+        #     os.path.join(self.g_pool.user_dir, "surfaces")
+        # )
+        # # self.surfaces = [
+        # #     Reference_Surface(self.g_pool, saved_definition=d)
+        # #     for d in self.surface_definitions.get("realtime_square_marker_surfaces", [])
+        # # ]
+        # self.surfaces = []
 
     def import_surfaces(self, surfaces_dir):
 
-        surface_definitions = []
-        if os.path.isdir(surfaces_dir):
-            for d in os.listdir(surfaces_dir):
-                logger.debug("Scanning: {}".format(d))
-                try:
-                    pass
-                    # if os.path.isfile(os.path.join(surfaces_dir, d)):
-                    #     d, ext = d.rsplit(".", 1)
-                    #     if ext not in ("py", "so", "dylib"):
-                    #         continue
-                    # module = importlib.import_module(d)
-                    # logger.debug("Imported: {}".format(module))
-                    # for name in dir(module):
-                    #     member = getattr(module, name)
-                    #     if (isinstance(member, type) and issubclass(member,
-                    #                                                 Plugin) and member.__name__ != "Plugin"):
-                    #         logger.info("Added: {}".format(member))
-                    #         runtime_plugins.append(member)
-                except Exception as e:
-                    logger.warning("Failed to load '{}'. Reason: '{}' ".format(d, e))
-        return surface_definitions
+        # surface_definitions = []
+        # if os.path.isdir(surfaces_dir):
+        #     for d in os.listdir(surfaces_dir):
+        #         logger.debug("Scanning: {}".format(d))
+        #         try:
+        #             pass
+        #             # if os.path.isfile(os.path.join(surfaces_dir, d)):
+        #             #     d, ext = d.rsplit(".", 1)
+        #             #     if ext not in ("py", "so", "dylib"):
+        #             #         continue
+        #             # module = importlib.import_module(d)
+        #             # logger.debug("Imported: {}".format(module))
+        #             # for name in dir(module):
+        #             #     member = getattr(module, name)
+        #             #     if (isinstance(member, type) and issubclass(member,
+        #             #                                                 Plugin) and member.__name__ != "Plugin"):
+        #             #         logger.info("Added: {}".format(member))
+        #             #         runtime_plugins.append(member)
+        #         except Exception as e:
+        #             logger.warning("Failed to load '{}'. Reason: '{}' ".format(d, e))
+        # return surface_definitions
 
     def on_notify(self, notification):
-        if notification["subject"] == "surfaces_changed":
-            logger.info("Surfaces changed. Saving to file.")
-            # self.save_surface_definitions_to_file()
-            #         TODO: End recording if ongoing.
+        # if notification["subject"] == "surfaces_changed":
+        #     logger.info("Surfaces changed. Saving to file.")
+        #     # self.save_surface_definitions_to_file()
+        #     #         TODO: End recording if ongoing.
 
     def on_pos(self, pos):
-        self._last_mouse_pos = normalize(
-            pos, self.g_pool.capture.frame_size, flip_y=True
-        )
+        # self._last_mouse_pos = normalize(
+        #     pos, self.g_pool.capture.frame_size, flip_y=True
+        # )
 
     def on_click(self, pos, button, action):
         if self.mode == "Show Markers and Surfaces":
@@ -182,23 +183,23 @@ class Hips_Surface_Tracker(Plugin):
 
     # TODO: Probably remove this
     def add_surface(self, _):
-        surf = Reference_Surface(self.g_pool)
-        surf.on_finish_define = self.save_surface_definitions_to_file
-        self.surfaces.append(surf)
-        self.update_gui_markers()
+        # surf = Reference_Surface(self.g_pool)
+        # surf.on_finish_define = self.save_surface_definitions_to_file
+        # self.surfaces.append(surf)
+        # self.update_gui_markers()
 
     # TODO: Probably remove this
     def remove_surface(self, i):
-        remove_surface = self.surfaces[i]
-        if remove_surface == self.marker_edit_surface:
-            self.marker_edit_surface = None
-        if remove_surface in self.edit_surfaces:
-            self.edit_surfaces.remove(remove_surface)
+        # remove_surface = self.surfaces[i]
+        # if remove_surface == self.marker_edit_surface:
+        #     self.marker_edit_surface = None
+        # if remove_surface in self.edit_surfaces:
+        #     self.edit_surfaces.remove(remove_surface)
 
-        self.surfaces[i].cleanup()
-        del self.surfaces[i]
-        self.update_gui_markers()
-        self.notify_all({"subject": "surfaces_changed"})
+        # self.surfaces[i].cleanup()
+        # del self.surfaces[i]
+        # self.update_gui_markers()
+        # self.notify_all({"subject": "surfaces_changed"})
 
     def show_eyes(self, _):
         self.notify_all({
@@ -303,75 +304,75 @@ class Hips_Surface_Tracker(Plugin):
         )
 
     def recent_events(self, events):
-        frame = events.get("frame")
-        if not frame:
-            return
-        self.img_shape = frame.height, frame.width, 3
-
-        if self.running:
-            gray = frame.gray
-            if self.invert_image:
-                gray = 255 - gray
-
-            self.markers = detect_hips_markers(frame, gray)
-
-
-
-
-            # if self.robust_detection:
-            #     self.markers = detect_markers_robust(gray, grid_size=4, aperture=self.aperture,
-            #             prev_markers=self.markers, true_detect_every_frame=3,
-            #             min_marker_perimeter=self.min_marker_perimeter, )
-            # else:
-            #     self.markers = detect_markers(gray, grid_size=5, aperture=self.aperture,
-            #             min_marker_perimeter=self.min_marker_perimeter, )
-            if self.mode == "Show marker IDs":
-                draw_markers(frame.gray, self.markers)
-
-        # locate surfaces, map gaze
-        for s in self.surfaces:
-            s.locate(self.markers, self.min_marker_perimeter, self.min_id_confidence, self.locate_3d, )
-            if s.detected:
-                s.gaze_on_srf = s.map_data_to_surface(events.get("gaze", []), s.m_from_screen)
-                s.fixations_on_srf = s.map_data_to_surface(events.get("fixations", []), s.m_from_screen)
-                s.update_gaze_history()
-            else:
-                s.gaze_on_srf = []
-                s.fixations_on_srf = []
-
-        events["surfaces"] = []
-        for s in self.surfaces:
-            if s.detected:
-                datum = {
-                    "topic": "surfaces.{}".format(s.name),
-                    "name": s.name,
-                    "uid": s.uid,
-                    "m_to_screen": s.m_to_screen.tolist(),
-                    "m_from_screen": s.m_from_screen.tolist(),
-                    "gaze_on_srf": s.gaze_on_srf,
-                    "fixations_on_srf": s.fixations_on_srf,
-                    "timestamp": frame.timestamp,
-                    "camera_pose_3d": s.camera_pose_3d.tolist() if s.camera_pose_3d is not None else None, }
-                events["surfaces"].append(datum)
+        # frame = events.get("frame")
+        # if not frame:
+        #     return
+        # self.img_shape = frame.height, frame.width, 3
 
         # if self.running:
-        #     self.button.status_text = "{}/{}".format(len([s for s in self.surfaces if s.detected]), len(self.surfaces))
-        # else:
-        #     self.button.status_text = "tracking paused"
+        #     gray = frame.gray
+        #     if self.invert_image:
+        #         gray = 255 - gray
 
-        # if self.is_solving_maze:
-        #     self.button.on_color[:] = (0.0, 1, 0.0, 0.8)
-        # else:
-        #     self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
+        #     self.markers = detect_hips_markers(frame, gray)
 
-        if self.mode == "Show Markers and Surfaces":
-            # edit surfaces by user
-            if self.edit_surf_verts:
-                pos = self._last_mouse_pos
-                for s, v_idx in self.edit_surf_verts:
-                    if s.detected:
-                        new_pos = s.img_to_ref_surface(np.array(pos))
-                        s.move_vertex(v_idx, new_pos)
+
+
+
+        #     # if self.robust_detection:
+        #     #     self.markers = detect_markers_robust(gray, grid_size=4, aperture=self.aperture,
+        #     #             prev_markers=self.markers, true_detect_every_frame=3,
+        #     #             min_marker_perimeter=self.min_marker_perimeter, )
+        #     # else:
+        #     #     self.markers = detect_markers(gray, grid_size=5, aperture=self.aperture,
+        #     #             min_marker_perimeter=self.min_marker_perimeter, )
+        #     if self.mode == "Show marker IDs":
+        #         draw_markers(frame.gray, self.markers)
+
+        # # locate surfaces, map gaze
+        # for s in self.surfaces:
+        #     s.locate(self.markers, self.min_marker_perimeter, self.min_id_confidence, self.locate_3d, )
+        #     if s.detected:
+        #         s.gaze_on_srf = s.map_data_to_surface(events.get("gaze", []), s.m_from_screen)
+        #         s.fixations_on_srf = s.map_data_to_surface(events.get("fixations", []), s.m_from_screen)
+        #         s.update_gaze_history()
+        #     else:
+        #         s.gaze_on_srf = []
+        #         s.fixations_on_srf = []
+
+        # events["surfaces"] = []
+        # for s in self.surfaces:
+        #     if s.detected:
+        #         datum = {
+        #             "topic": "surfaces.{}".format(s.name),
+        #             "name": s.name,
+        #             "uid": s.uid,
+        #             "m_to_screen": s.m_to_screen.tolist(),
+        #             "m_from_screen": s.m_from_screen.tolist(),
+        #             "gaze_on_srf": s.gaze_on_srf,
+        #             "fixations_on_srf": s.fixations_on_srf,
+        #             "timestamp": frame.timestamp,
+        #             "camera_pose_3d": s.camera_pose_3d.tolist() if s.camera_pose_3d is not None else None, }
+        #         events["surfaces"].append(datum)
+
+        # # if self.running:
+        # #     self.button.status_text = "{}/{}".format(len([s for s in self.surfaces if s.detected]), len(self.surfaces))
+        # # else:
+        # #     self.button.status_text = "tracking paused"
+
+        # # if self.is_solving_maze:
+        # #     self.button.on_color[:] = (0.0, 1, 0.0, 0.8)
+        # # else:
+        # #     self.button.on_color[:] = (1, 0.0, 0.0, 0.8)
+
+        # if self.mode == "Show Markers and Surfaces":
+        #     # edit surfaces by user
+        #     if self.edit_surf_verts:
+        #         pos = self._last_mouse_pos
+        #         for s, v_idx in self.edit_surf_verts:
+        #             if s.detected:
+        #                 new_pos = s.img_to_ref_surface(np.array(pos))
+        #                 s.move_vertex(v_idx, new_pos)
 
     def get_init_dict(self):
         return {
@@ -384,49 +385,49 @@ class Hips_Surface_Tracker(Plugin):
         """
         Display marker and surface info inside world screen
         """
-        if self.mode == "Show Markers and Surfaces":
-            for m in self.markers:
-                hat = np.array([[[0, 0], [0, 1], [0.5, 1.3], [1, 1], [1, 0], [0, 0]]], dtype=np.float32, )
-                hat = cv2.perspectiveTransform(hat, m_marker_to_screen(m))
-                if (m["perimeter"] >= self.min_marker_perimeter and m["id_confidence"] > self.min_id_confidence):
-                    draw_polyline(hat.reshape((6, 2)), color=RGBA(0.1, 1.0, 1.0, 0.5))
-                    draw_polyline(hat.reshape((6, 2)), color=RGBA(0.1, 1.0, 1.0, 0.3), line_type=GL_POLYGON, )
-                else:
-                    draw_polyline(hat.reshape((6, 2)), color=RGBA(0.1, 1.0, 1.0, 0.5))
+        # if self.mode == "Show Markers and Surfaces":
+        #     for m in self.markers:
+        #         hat = np.array([[[0, 0], [0, 1], [0.5, 1.3], [1, 1], [1, 0], [0, 0]]], dtype=np.float32, )
+        #         hat = cv2.perspectiveTransform(hat, m_marker_to_screen(m))
+        #         if (m["perimeter"] >= self.min_marker_perimeter and m["id_confidence"] > self.min_id_confidence):
+        #             draw_polyline(hat.reshape((6, 2)), color=RGBA(0.1, 1.0, 1.0, 0.5))
+        #             draw_polyline(hat.reshape((6, 2)), color=RGBA(0.1, 1.0, 1.0, 0.3), line_type=GL_POLYGON, )
+        #         else:
+        #             draw_polyline(hat.reshape((6, 2)), color=RGBA(0.1, 1.0, 1.0, 0.5))
 
-            for s in self.surfaces:
-                if s not in self.edit_surfaces and s is not self.marker_edit_surface:
-                    s.gl_draw_frame(self.img_shape)
+        #     for s in self.surfaces:
+        #         if s not in self.edit_surfaces and s is not self.marker_edit_surface:
+        #             s.gl_draw_frame(self.img_shape)
 
-            for s in self.edit_surfaces:
-                s.gl_draw_frame(self.img_shape, highlight=True, surface_mode=True)
-                s.gl_draw_corners()
+        #     for s in self.edit_surfaces:
+        #         s.gl_draw_frame(self.img_shape, highlight=True, surface_mode=True)
+        #         s.gl_draw_corners()
 
-            if self.marker_edit_surface:
-                inc = []
-                exc = []
-                for m in self.markers:
-                    if m["perimeter"] >= self.min_marker_perimeter:
-                        if m["id"] in self.marker_edit_surface.markers:
-                            inc.append(m["centroid"])
-                        else:
-                            exc.append(m["centroid"])
-                draw_points(exc, size=20, color=RGBA(1.0, 0.5, 0.5, 0.8))
-                draw_points(inc, size=20, color=RGBA(0.5, 1.0, 0.5, 0.8))
-                self.marker_edit_surface.gl_draw_frame(self.img_shape, color=(0.0, 0.9, 0.6, 1.0), highlight=True,
-                        marker_mode=True, )
+        #     if self.marker_edit_surface:
+        #         inc = []
+        #         exc = []
+        #         for m in self.markers:
+        #             if m["perimeter"] >= self.min_marker_perimeter:
+        #                 if m["id"] in self.marker_edit_surface.markers:
+        #                     inc.append(m["centroid"])
+        #                 else:
+        #                     exc.append(m["centroid"])
+        #         draw_points(exc, size=20, color=RGBA(1.0, 0.5, 0.5, 0.8))
+        #         draw_points(inc, size=20, color=RGBA(0.5, 1.0, 0.5, 0.8))
+        #         self.marker_edit_surface.gl_draw_frame(self.img_shape, color=(0.0, 0.9, 0.6, 1.0), highlight=True,
+        #                 marker_mode=True, )
 
-        elif self.mode == "Show Heatmaps":
-            for s in self.surfaces:
-                if self.g_pool.app != "player":
-                    s.generate_heatmap()
-                s.gl_display_heatmap()
+        # elif self.mode == "Show Heatmaps":
+        #     for s in self.surfaces:
+        #         if self.g_pool.app != "player":
+        #             s.generate_heatmap()
+        #         s.gl_display_heatmap()
 
-        for s in self.surfaces:
-            if self.locate_3d:
-                s.gl_display_in_window_3d(self.g_pool.image_tex)
-            else:
-                s.gl_display_in_window(self.g_pool.image_tex)
+        # for s in self.surfaces:
+        #     if self.locate_3d:
+        #         s.gl_display_in_window_3d(self.g_pool.image_tex)
+        #     else:
+        #         s.gl_display_in_window(self.g_pool.image_tex)
 
     def cleanup(self):
         """ called when the plugin gets terminated.
