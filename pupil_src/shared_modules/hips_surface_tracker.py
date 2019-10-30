@@ -99,9 +99,9 @@ class Hips_Surface_Tracker(Plugin):
         # #     for d in self.surface_definitions.get("realtime_square_marker_surfaces", [])
         # # ]
         # self.surfaces = []
+        pass
 
     def import_surfaces(self, surfaces_dir):
-
         # surface_definitions = []
         # if os.path.isdir(surfaces_dir):
         #     for d in os.listdir(surfaces_dir):
@@ -123,17 +123,20 @@ class Hips_Surface_Tracker(Plugin):
         #         except Exception as e:
         #             logger.warning("Failed to load '{}'. Reason: '{}' ".format(d, e))
         # return surface_definitions
+        pass
 
     def on_notify(self, notification):
         # if notification["subject"] == "surfaces_changed":
         #     logger.info("Surfaces changed. Saving to file.")
         #     # self.save_surface_definitions_to_file()
         #     #         TODO: End recording if ongoing.
+        pass
 
     def on_pos(self, pos):
         # self._last_mouse_pos = normalize(
         #     pos, self.g_pool.capture.frame_size, flip_y=True
         # )
+        pass
 
     def on_click(self, pos, button, action):
         if self.mode == "Show Markers and Surfaces":
@@ -187,6 +190,7 @@ class Hips_Surface_Tracker(Plugin):
         # surf.on_finish_define = self.save_surface_definitions_to_file
         # self.surfaces.append(surf)
         # self.update_gui_markers()
+        pass
 
     # TODO: Probably remove this
     def remove_surface(self, i):
@@ -200,6 +204,7 @@ class Hips_Surface_Tracker(Plugin):
         # del self.surfaces[i]
         # self.update_gui_markers()
         # self.notify_all({"subject": "surfaces_changed"})
+        pass
 
     def show_eyes(self, _):
         self.notify_all({
@@ -373,6 +378,7 @@ class Hips_Surface_Tracker(Plugin):
         #             if s.detected:
         #                 new_pos = s.img_to_ref_surface(np.array(pos))
         #                 s.move_vertex(v_idx, new_pos)
+        pass
 
     def get_init_dict(self):
         return {
@@ -428,6 +434,7 @@ class Hips_Surface_Tracker(Plugin):
         #         s.gl_display_in_window_3d(self.g_pool.image_tex)
         #     else:
         #         s.gl_display_in_window(self.g_pool.image_tex)
+        pass
 
     def cleanup(self):
         """ called when the plugin gets terminated.
